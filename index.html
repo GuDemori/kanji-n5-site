@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kanji N5 - treino de identificação</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="hero">
+      <div>
+        <div class="hero-topline">
+          <p class="eyebrow">JLPT N5</p>
+          <div class="help-wrap">
+            <button id="helpToggleBtn" class="help-icon-btn" type="button" aria-expanded="false" aria-controls="helpTooltip" aria-label="Mostrar ajuda">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9.2 9.3a2.8 2.8 0 1 1 4.8 2c-.7.7-1.7 1.1-1.7 2.2"></path>
+                <circle cx="12" cy="17.2" r="1"></circle>
+              </svg>
+            </button>
+            <div id="helpTooltip" class="help-tooltip hidden" role="dialog" aria-label="Ajuda rápida">
+              <p><strong>Quiz:</strong> 1-4 responde, Enter vai para próxima e Esc fecha feedback.</p>
+              <p><strong>Navegação:</strong> setas esquerda/direita avançam e voltam os cards.</p>
+              <p><strong>Lista:</strong> use busca e status para filtrar revisão.</p>
+            </div>
+          </div>
+        </div>
+        <h1>Treino de identificação de kanji</h1>
+        <p class="subtitle">
+          Feito com o intuito de praticar o reconhecimento de kanji.
+        </p>
+        <p id="sessionSummary" class="session-summary" aria-live="polite"></p>
+      </div>
+      <div class="stats-box">
+        <div><strong id="totalCount">110</strong><span>kanji</span></div>
+        <div><strong id="knownCount">0</strong><span>sabia</span></div>
+        <div><strong id="unknownCount">0</strong><span>não sabia</span></div>
+      </div>
+    </header>
+
+    <section class="toolbar card">
+      <p id="sessionSummaryToolbar" class="session-summary toolbar-summary" aria-live="polite"></p>
+
+      <div class="toolbar-group mode-switch" role="group" aria-label="Modo de estudo">
+        <button class="mode-btn active" data-mode="flashcard" type="button" aria-pressed="true">Flashcards</button>
+        <button class="mode-btn" data-mode="quiz" type="button" aria-pressed="false">Quiz</button>
+      </div>
+
+      <div class="toolbar-group filters">
+        <label class="checkbox-wrap">
+          <input type="checkbox" id="shuffleToggle" checked />
+          Embaralhar
+        </label>
+      </div>
+
+      <div class="toolbar-group actions">
+        <button id="resetProgressBtn" class="ghost" type="button">Zerar progresso</button>
+      </div>
+    </section>
+
+    <section class="card metrics-card" aria-live="polite">
+      <div class="metric-item">
+        <span>Tentativas</span>
+        <strong id="sessionAttempts">0</strong>
+      </div>
+      <div class="metric-item">
+        <span>Acertos</span>
+        <strong id="sessionCorrect">0</strong>
+      </div>
+      <div class="metric-item">
+        <span>Taxa</span>
+        <strong id="sessionRate">0%</strong>
+      </div>
+      <div class="metric-item">
+        <span>Streak</span>
+        <strong id="sessionStreak">0</strong>
+      </div>
+      <div class="metric-item">
+        <span>Melhor streak</span>
+        <strong id="sessionBestStreak">0</strong>
+      </div>
+    </section>
+
+    <section id="flashcardView" class="view active-view">
+      <article class="card flashcard-card">
+        <div class="flashcard-top">
+          <span id="cardPosition" class="badge"></span>
+          <span id="cardSource" class="badge badge-soft"></span>
+        </div>
+
+        <div id="kanjiCard" class="kanji-card" aria-live="polite">山</div>
+
+        <div class="flashcard-controls">
+          <div class="control-block">
+            <p class="control-label">Revelar</p>
+            <div class="control-row">
+              <button id="hintBtn" class="ghost" type="button">Mostrar dica</button>
+              <button id="answerBtn" type="button">Revelar resposta</button>
+            </div>
+          </div>
+          <div class="control-block">
+            <p class="control-label">Marcação</p>
+            <div class="control-row">
+              <button id="knewBtn" class="ghost" type="button">Sabia</button>
+              <button id="didntKnowBtn" type="button">Não sabia</button>
+            </div>
+          </div>
+          <div class="control-block">
+            <p class="control-label">Navegação</p>
+            <div class="control-row">
+              <button id="prevBtn" class="ghost" type="button">Anterior</button>
+              <button id="nextBtn" type="button">Próximo</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="hintBox" class="info-box hidden" role="status" aria-live="polite"></div>
+        <div id="answerBox" class="answer-box hidden" role="status" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <section id="quizView" class="view hidden">
+      <article class="card quiz-card">
+        <div class="flashcard-top">
+          <span id="quizPosition" class="badge"></span>
+          <span id="quizSource" class="badge badge-soft"></span>
+        </div>
+
+        <p class="quiz-label">Qual é o significado deste kanji?</p>
+        <p class="quiz-hotkeys">Atalhos: 1-4 responde, Enter vai para a próxima, Esc fecha dicas.</p>
+        <div id="quizKanji" class="kanji-card" aria-live="polite">山</div>
+
+        <div id="quizOptions" class="quiz-options" role="group" aria-label="Opções de resposta"></div>
+
+        <div id="quizFeedback" class="info-box hidden" role="status" aria-live="polite"></div>
+
+        <div class="nav-row">
+          <button id="quizHintBtn" class="ghost" type="button">Mostrar dica</button>
+          <button id="quizNextBtn" type="button">Próxima pergunta</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="card list-card">
+      <div class="list-header">
+        <h2>Lista completa</h2>
+      </div>
+      <div class="list-toolbar">
+        <label>
+          Buscar
+          <input id="gridSearch" type="search" placeholder="kanji, leitura ou significado" />
+        </label>
+        <label>
+          Status
+          <select id="gridStatusFilter">
+            <option value="all">Todos</option>
+            <option value="known">Sabia</option>
+            <option value="unknown">Não sabia</option>
+            <option value="unmarked">Sem marcação</option>
+          </select>
+        </label>
+      </div>
+      <p id="gridResultsCount" class="grid-results-count">0 resultados</p>
+      <div id="kanjiGrid" class="kanji-grid"></div>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
