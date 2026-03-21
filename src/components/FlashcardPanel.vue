@@ -32,6 +32,10 @@ defineProps({
     type: String,
     required: true,
   },
+  transitionDirection: {
+    type: Number,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
@@ -68,9 +72,11 @@ const emit = defineEmits([
       </label>
     </div>
 
-    <div class="kanji-panel mb-4 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
-      <span class="kanji-face">{{ currentKanji }}</span>
-    </div>
+    <Transition :name="transitionDirection < 0 ? 'card-roulette-up' : 'card-roulette-down'" mode="out-in">
+      <div :key="currentKanji" class="kanji-panel mb-4 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
+        <span class="kanji-face">{{ currentKanji }}</span>
+      </div>
+    </Transition>
 
     <div class="grid gap-3 lg:grid-cols-3">
       <div class="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-col">
@@ -116,7 +122,7 @@ const emit = defineEmits([
 
     <div v-if="flashcardAnswer" class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
       <strong class="block text-lg">{{ flashcardAnswer.title }}</strong>
-      <p class="mt-2">Leitura principal: <ruby>{{ flashcardAnswer.reading }}<rt>furigana / leitura</rt></ruby></p>
+      <p class="mt-2">Leitura principal: {{ flashcardAnswer.reading }}</p>
       <p class="mt-1">{{ flashcardAnswer.source }}</p>
     </div>
   </section>
