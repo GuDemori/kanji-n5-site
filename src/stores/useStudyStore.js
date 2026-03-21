@@ -121,6 +121,8 @@ export const useStudyStore = defineStore('study', () => {
         item.kanji,
         item.meaning,
         item.reading,
+        item.kunReading,
+        item.onReading,
         item.hintText,
       ].join(' '));
 
