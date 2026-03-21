@@ -1,4 +1,4 @@
-window.KANJI_DATA = [
+export const kanjiData = [
   {id:1,kanji:'山',reading:'やま',meaning:'montanha',lesson:1,page:25,hint:'Tem relação com <ruby>やま<rt>montanha</rt></ruby>.'},
   {id:2,kanji:'川',reading:'かわ',meaning:'rio',lesson:1,page:25,hint:'Tem relação com <ruby>かわ<rt>rio</rt></ruby>.'},
   {id:3,kanji:'田',reading:'た',meaning:'arrozal',lesson:1,page:25,hint:'Tem relação com <ruby>た<rt>arrozal</rt></ruby>, um campo de arroz.'},
