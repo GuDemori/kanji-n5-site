@@ -115,6 +115,12 @@ describe('useStudyStore (state)', () => {
     store.gridSearch = 'montanha';
     expect(store.gridFilteredData.length).toBeGreaterThan(0);
 
+    store.gridSearch = 'ガク';
+    expect(store.gridFilteredData.some(item => item.kanji === '学')).toBe(true);
+
+    store.gridSearch = 'まな-ぶ';
+    expect(store.gridFilteredData.some(item => item.kanji === '学')).toBe(true);
+
     const currentBefore = store.current;
     store.setReadingInput(firstReadingVariant(currentBefore.reading));
     store.submitReadingAttempt();
@@ -175,4 +181,18 @@ describe('useStudyStore (state)', () => {
     store.setShuffle(false);
     expect(store.sessionSummary).toContain('embaralhar: desligado');
   });
+
+  it('sourceData inclui kunReading e onReading para os kanjis', () => {
+    const store = createStore();
+
+    expect(store.sourceData.length).toBeGreaterThan(0);
+
+    for (const item of store.sourceData) {
+      expect(typeof item.kunReading).toBe('string');
+      expect(item.kunReading.length).toBeGreaterThan(0);
+      expect(typeof item.onReading).toBe('string');
+      expect(item.onReading.length).toBeGreaterThan(0);
+    }
+  });
+
 });

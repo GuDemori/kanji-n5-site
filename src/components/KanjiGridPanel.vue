@@ -31,7 +31,7 @@ const emit = defineEmits(['update:grid-search', 'update:grid-status']);
         <input
           :value="gridSearch"
           type="search"
-          placeholder="kanji, leitura ou significado"
+          placeholder="kanji, leitura kun/on ou significado"
           class="mt-1 w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
           @input="emit('update:grid-search', $event.target.value)"
         >
@@ -64,7 +64,8 @@ const emit = defineEmits(['update:grid-search', 'update:grid-status']);
       >
         <div class="mb-2 text-5xl leading-none">{{ item.kanji }}</div>
         <p class="text-sm text-slate-300"><strong class="text-slate-100">Significado:</strong> {{ item.meaning }}</p>
-        <p class="text-sm text-slate-300"><strong class="text-slate-100">Leitura:</strong> {{ item.reading }}</p>
+        <p class="text-sm text-slate-300"><strong class="text-slate-100">Leitura Kun:</strong> {{ item.kunReading }}</p>
+        <p class="text-sm text-slate-300"><strong class="text-slate-100">Leitura On:</strong> {{ item.onReading }}</p>
         <p class="text-sm text-slate-300"><strong class="text-slate-100">Dica:</strong> {{ item.hintText }}</p>
         <p class="text-sm text-slate-300"><strong class="text-slate-100">Fonte:</strong> lição {{ item.lesson }}, p. {{ item.page }}</p>
         <p class="text-sm text-slate-300"><strong class="text-slate-100">Status:</strong> {{ getProgressState(item.id) }}</p>
