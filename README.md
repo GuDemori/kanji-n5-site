@@ -1,10 +1,11 @@
 # Kanji N5 - treino de identificação
 
-Aplicação web para praticar reconhecimento de kanji do **JLPT N5**, agora migrada para **Vue 3 + Pinia + Tailwind + Vite**.
+Aplicação web para praticar reconhecimento de kanji do **JLPT N5**, migrada para **Vue 3 + Pinia + Tailwind + Vite**.
 
 ## Funcionalidades
 
-- Modo **Flashcards**
+- Modo **Flashcards** com validação de leitura
+- Conversão automática de escrita para hiragana (via `wanakana`)
 - Modo **Quiz** com múltipla escolha
 - Busca e filtro por status na lista completa
 - Persistência de progresso e sessão no `localStorage`
@@ -17,8 +18,10 @@ Aplicação web para praticar reconhecimento de kanji do **JLPT N5**, agora migr
 - Pinia
 - Tailwind CSS 4
 - Vite
+- Vitest
+- WanaKana
 
-## Como executar
+## Como rodar
 
 1. Instale dependências:
 
@@ -32,16 +35,30 @@ npm install
 npm run dev
 ```
 
-3. Build de produção:
+3. Gere build de produção:
 
 ```bash
 npm run build
 ```
 
-4. Pré-visualização da build:
+4. Pré-visualize a build:
 
 ```bash
 npm run preview
+```
+
+## Testes
+
+- Rodar testes uma vez:
+
+```bash
+npm test
+```
+
+- Rodar em modo watch:
+
+```bash
+npm run test:watch
 ```
 
 ## Atalhos de teclado
@@ -55,6 +72,10 @@ npm run preview
 
 - `src/App.vue`: UI principal
 - `src/stores/useStudyStore.js`: estado e regras de negócio
+- `src/stores/useStudyStore.reading.test.js`: testes do fluxo de leitura
+- `src/stores/useStudyStore.quiz.test.js`: testes do fluxo de quiz
+- `src/stores/useStudyStore.state.test.js`: testes de estado/persistência
+- `src/stores/useStudyStore.test.helpers.js`: helpers da suíte de testes
 - `src/data/kanjiData.js`: base de kanji
 - `src/style.css`: Tailwind + estilos auxiliares
 - `src/main.js`: bootstrap da aplicação
@@ -65,4 +86,3 @@ A aplicação usa `localStorage` com as chaves:
 
 - `kanji-n5-progress-v1`
 - `kanji-n5-session-v1`
-
