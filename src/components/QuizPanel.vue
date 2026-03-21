@@ -36,6 +36,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  transitionDirection: {
+    type: Number,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['answer', 'show-hint', 'next', 'set-shuffle']);
@@ -86,9 +90,11 @@ function optionClasses(option) {
     <p class="text-slate-400">Qual é o significado deste kanji?</p>
     <p class="mt-1 text-xs text-sky-200">Atalhos: 1-4 responde, Enter vai para a próxima, Esc fecha dicas.</p>
 
-    <div class="kanji-panel mb-4 mt-3 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
-      <span class="kanji-face">{{ currentKanji }}</span>
-    </div>
+    <Transition :name="transitionDirection < 0 ? 'card-roulette-up' : 'card-roulette-down'" mode="out-in">
+      <div :key="currentKanji" class="kanji-panel mb-4 mt-3 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
+        <span class="kanji-face">{{ currentKanji }}</span>
+      </div>
+    </Transition>
 
     <div class="grid gap-2 sm:grid-cols-2">
       <button

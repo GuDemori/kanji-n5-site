@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import HeroHeader from './components/HeroHeader.vue';
 import StudyToolbar from './components/StudyToolbar.vue';
@@ -39,6 +39,12 @@ const {
 const isFlashcard = computed(() => mode.value === 'flashcard');
 const currentKanji = computed(() => (current.value ? current.value.kanji : '-'));
 const currentMeaning = computed(() => (current.value ? current.value.meaning : ''));
+const transitionDirection = ref(1);
+
+function moveCardWithDirection(delta) {
+  transitionDirection.value = delta < 0 ? -1 : 1;
+  store.moveCard(delta);
+}
 
 function handleKeydown(event) {
   if (event.altKey || event.ctrlKey || event.metaKey) return;
@@ -64,14 +70,14 @@ function handleKeydown(event) {
   }
 
   if (mode.value === 'quiz' && quizAnswered.value && event.key === 'Enter') {
-    store.moveCard(1);
+    moveCardWithDirection(1);
     return;
   }
 
   if (event.key === 'ArrowLeft') {
-    store.moveCard(-1);
+    moveCardWithDirection(-1);
   } else if (event.key === 'ArrowRight') {
-    store.moveCard(1);
+    moveCardWithDirection(1);
   }
 }
 
@@ -128,13 +134,14 @@ onUnmounted(() => {
       :reading-input="readingInput"
       :reading-feedback="readingFeedback"
       :shuffle-enabled="shuffleEnabled"
+      :transition-direction="transitionDirection"
       @set-shuffle="store.setShuffle"
       @show-hint="store.showFlashcardHint"
       @show-answer="store.showFlashcardAnswer"
       @update-reading="store.setReadingInput"
       @submit-reading="store.submitReadingAttempt"
-      @move-prev="store.moveCard(-1)"
-      @move-next="store.moveCard(1)"
+      @move-prev="moveCardWithDirection(-1)"
+      @move-next="moveCardWithDirection(1)"
     />
 
     <QuizPanel
@@ -148,10 +155,11 @@ onUnmounted(() => {
       :selected-option="selectedOption"
       :correct-meaning="currentMeaning"
       :shuffle-enabled="shuffleEnabled"
+      :transition-direction="transitionDirection"
       @set-shuffle="store.setShuffle"
       @answer="store.answerQuiz"
       @show-hint="store.showQuizHint"
-      @next="store.moveCard(1)"
+      @next="moveCardWithDirection(1)"
     />
 
     <KanjiGridPanel

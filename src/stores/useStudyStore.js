@@ -467,8 +467,20 @@ function normalizeSearchTerm(value) {
 function htmlToText(value) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(value, 'text/html');
-  const text = doc.body.textContent || '';
 
+  doc.body.querySelectorAll('ruby').forEach(ruby => {
+    const rt = ruby.querySelector('rt');
+    const rtText = rt ? (rt.textContent || '').trim() : '';
+
+    const clone = ruby.cloneNode(true);
+    clone.querySelectorAll('rt').forEach(node => node.remove());
+    const baseText = (clone.textContent || '').replace(/\s+/g, ' ').trim();
+
+    const replacement = rtText ? baseText + ' (' + rtText + ')' : baseText;
+    ruby.replaceWith(doc.createTextNode(replacement));
+  });
+
+  const text = doc.body.textContent || '';
   return text.replace(/\s+/g, ' ').trim();
 }
 
@@ -482,8 +494,8 @@ function getAcceptedReadings(reading) {
 }
 
 function isReadingMatch(candidate, accepted) {
-  const normalizedCandidate = candidate.replace(/30fc/g, '');
-  return accepted.some(item => item === candidate || item.replace(/30fc/g, '') === normalizedCandidate);
+  const normalizedCandidate = candidate.replace(/\u30fc/g, '');
+  return accepted.some(item => item === candidate || item.replace(/\u30fc/g, '') === normalizedCandidate);
 }
 
 function normalizeKana(value) {
