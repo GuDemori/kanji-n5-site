@@ -30,7 +30,7 @@ const props = defineProps({
   },
   correctMeaning: {
     type: String,
-    default: '',
+    default: "",
   },
   shuffleEnabled: {
     type: Boolean,
@@ -42,25 +42,25 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['answer', 'show-hint', 'next', 'set-shuffle']);
+const emit = defineEmits(["answer", "show-hint", "next", "set-shuffle"]);
 
 function optionClasses(option) {
   if (!props.quizAnswered) {
-    return 'quiz-option border-slate-700 bg-slate-800/70 hover:bg-slate-700/70';
+    return "quiz-option border-slate-700 bg-slate-800/70 hover:bg-slate-700/70";
   }
 
   const isCorrect = option === props.correctMeaning;
   const isWrongSelected = option === props.selectedOption && !isCorrect;
 
   if (isCorrect) {
-    return 'quiz-option border-emerald-400/70 bg-emerald-500/20';
+    return "quiz-option border-emerald-400/70 bg-emerald-500/20";
   }
 
   if (isWrongSelected) {
-    return 'quiz-option border-rose-400/70 bg-rose-500/20';
+    return "quiz-option border-rose-400/70 bg-rose-500/20";
   }
 
-  return 'quiz-option border-slate-700 bg-slate-800/50';
+  return "quiz-option border-slate-700 bg-slate-800/50";
 }
 </script>
 
