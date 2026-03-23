@@ -6,6 +6,21 @@ import {
   STORAGE_KEY,
 } from './useStudyStore.test.helpers';
 
+function splitReadingVariants(reading) {
+  return String(reading || '')
+    .split(/[・/、,\s]+/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function acceptedVariantsForItem(item) {
+  return [...new Set([
+    ...splitReadingVariants(item.kunReading),
+    ...splitReadingVariants(item.onReading),
+    ...splitReadingVariants(item.reading),
+  ])];
+}
+
 describe('useStudyStore (state)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -79,8 +94,11 @@ describe('useStudyStore (state)', () => {
     store.setRequireAllReadings(true);
 
     const currentBefore = store.current;
-    store.setReadingInput(firstReadingVariant(currentBefore.reading));
-    store.submitReadingAttempt();
+    const variants = acceptedVariantsForItem(currentBefore);
+    for (const variant of variants) {
+      store.setReadingInput(variant);
+      store.submitReadingAttempt();
+    }
 
     const rawSession = localStorage.getItem(SESSION_KEY);
     const rawProgress = localStorage.getItem(STORAGE_KEY);

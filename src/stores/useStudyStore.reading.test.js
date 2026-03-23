@@ -1,6 +1,27 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStore, firstReadingVariant } from './useStudyStore.test.helpers';
 
+function splitReadingVariants(reading) {
+  return String(reading || '')
+    .split(/[・/、,\s]+/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function acceptedVariantsForItem(item) {
+  return [...new Set([
+    ...splitReadingVariants(item.kunReading),
+    ...splitReadingVariants(item.onReading),
+    ...splitReadingVariants(item.reading),
+  ])];
+}
+
+function moveToCard(store, targetId) {
+  for (let i = 0; i < store.deck.length && store.current.id !== targetId; i += 1) {
+    store.moveCard(1);
+  }
+}
+
 describe('useStudyStore (reading)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -102,32 +123,47 @@ describe('useStudyStore (reading)', () => {
 
   it('modo completar todas só avança após registrar todas as leituras', () => {
     const store = createStore();
+
+    const target = store.sourceData.find(item => acceptedVariantsForItem(item).length >= 2);
+    expect(target).toBeTruthy();
+
+    moveToCard(store, target.id);
+    const variants = acceptedVariantsForItem(store.current);
     const firstId = store.current.id;
 
     store.setRequireAllReadings(true);
 
-    store.setReadingInput('yama');
+    store.setReadingInput(variants[0]);
     store.submitReadingAttempt();
 
     expect(store.current.id).toBe(firstId);
     expect(store.readingsFoundCount).toBe(1);
-    expect(store.readingFeedback).toContain('1/2');
+    expect(store.readingFeedback).toContain(`1/${variants.length}`);
 
-    store.setReadingInput('san');
-    store.submitReadingAttempt();
+    for (let i = 1; i < variants.length; i += 1) {
+      store.setReadingInput(variants[i]);
+      store.submitReadingAttempt();
+    }
 
+    expect(store.readingsFoundCount).toBe(0);
     expect(store.current.id).not.toBe(firstId);
   });
 
   it('modo completar todas não registra leitura repetida', () => {
     const store = createStore();
 
+    const target = store.sourceData.find(item => acceptedVariantsForItem(item).length >= 2);
+    expect(target).toBeTruthy();
+    moveToCard(store, target.id);
+
+    const firstVariant = acceptedVariantsForItem(store.current)[0];
+
     store.setRequireAllReadings(true);
-    store.setReadingInput('yama');
+    store.setReadingInput(firstVariant);
     store.submitReadingAttempt();
     const attemptsAfterFirst = store.sessionStats.attempts;
 
-    store.setReadingInput('yama');
+    store.setReadingInput(firstVariant);
     store.submitReadingAttempt();
 
     expect(store.sessionStats.attempts).toBe(attemptsAfterFirst);
