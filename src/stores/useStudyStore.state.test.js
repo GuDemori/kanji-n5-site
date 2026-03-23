@@ -6,21 +6,6 @@ import {
   STORAGE_KEY,
 } from './useStudyStore.test.helpers';
 
-function splitReadingVariants(reading) {
-  return String(reading || '')
-    .split(/[・/、,\s]+/)
-    .map(part => part.trim())
-    .filter(Boolean);
-}
-
-function acceptedVariantsForItem(item) {
-  return [...new Set([
-    ...splitReadingVariants(item.kunReading),
-    ...splitReadingVariants(item.onReading),
-    ...splitReadingVariants(item.reading),
-  ])];
-}
-
 describe('useStudyStore (state)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -91,14 +76,14 @@ describe('useStudyStore (state)', () => {
 
     store.setMode('quiz');
     store.setShuffle(false);
-    store.setRequireAllReadings(true);
+    store.setRequireAllReadings(false);
 
     const currentBefore = store.current;
-    const variants = acceptedVariantsForItem(currentBefore);
-    for (const variant of variants) {
-      store.setReadingInput(variant);
-      store.submitReadingAttempt();
-    }
+    store.setReadingInput(firstReadingVariant(currentBefore.kunReading));
+    store.submitReadingAttempt();
+
+    store.setReadingInputScript('katakana');
+    store.setRequireAllReadings(true);
 
     const rawSession = localStorage.getItem(SESSION_KEY);
     const rawProgress = localStorage.getItem(STORAGE_KEY);
@@ -111,6 +96,7 @@ describe('useStudyStore (state)', () => {
 
     expect(session.mode).toBe('quiz');
     expect(typeof session.shuffle).toBe('boolean');
+    expect(session.readingInputScript).toBe('katakana');
     expect(session.requireAllReadings).toBe(true);
     expect(Array.isArray(progress.known)).toBe(true);
   });

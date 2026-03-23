@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import { toHiragana as wanakanaToHiragana } from 'wanakana';
+import { toHiragana as wanakanaToHiragana, toKatakana as wanakanaToKatakana } from 'wanakana';
 import { kanjiData } from '../data/kanjiData';
 
 const STORAGE_KEY = 'kanji-n5-progress-v1';
@@ -64,6 +64,7 @@ export const useStudyStore = defineStore('study', () => {
   const flashcardAnswerVisible = ref(false);
   const readingInput = ref('');
   const readingFeedback = ref('');
+  const readingInputScript = ref(initialSession.readingInputScript);
   const requireAllReadings = ref(initialSession.requireAllReadings);
   const foundReadings = ref([]);
 
@@ -109,10 +110,10 @@ export const useStudyStore = defineStore('study', () => {
     };
   });
 
-  const currentAcceptedReadings = computed(() => getAcceptedReadingsForItem(current.value));
+  const currentAcceptedReadings = computed(() => getAcceptedReadingsForItem(current.value, readingInputScript.value));
   const readingsTotalCount = computed(() => currentAcceptedReadings.value.length);
   const readingsFoundCount = computed(() => foundReadings.value.length);
-  const readingsFoundPreview = computed(() => foundReadings.value.join(' ・ '));
+  const readingsOverallCount = computed(() => getAcceptedReadingsForItem(current.value, 'all').length);
 
   const gridFilteredData = computed(() => {
     const query = normalizeSearchTerm(gridSearch.value);
@@ -196,8 +197,15 @@ export const useStudyStore = defineStore('study', () => {
   }
 
   function setReadingInput(value) {
-    readingInput.value = toHiraganaInput(value);
+    readingInput.value = convertInputByScript(value, readingInputScript.value);
     readingFeedback.value = '';
+  }
+
+  function setReadingInputScript(script) {
+    readingInputScript.value = script === 'katakana' ? 'katakana' : 'hiragana';
+    readingInput.value = convertInputByScript(readingInput.value, readingInputScript.value);
+    readingFeedback.value = '';
+    saveSession();
   }
 
   function setRequireAllReadings(enabled) {
@@ -209,15 +217,25 @@ export const useStudyStore = defineStore('study', () => {
   function submitReadingAttempt() {
     if (!current.value) return;
 
+    const scriptValidationError = validateInputForScript(readingInput.value, readingInputScript.value);
+    if (scriptValidationError) {
+      readingFeedback.value = scriptValidationError;
+      return;
+    }
+
     const candidate = normalizeKana(readingInput.value);
     if (!candidate) {
-      readingFeedback.value = 'Digite a leitura em hiragana.';
+      readingFeedback.value = readingInputScript.value === 'katakana'
+        ? 'Digite a leitura em katakana.'
+        : 'Digite a leitura em hiragana.';
       return;
     }
 
     const accepted = currentAcceptedReadings.value;
     if (!accepted.length) {
-      readingFeedback.value = 'Sem leituras cadastradas para este kanji.';
+      readingFeedback.value = readingInputScript.value === 'katakana'
+        ? 'Sem leituras on cadastradas para este kanji.'
+        : 'Sem leituras kun cadastradas para este kanji.';
       return;
     }
 
@@ -225,8 +243,19 @@ export const useStudyStore = defineStore('study', () => {
     const correct = Boolean(matchedReading);
 
     if (!correct) {
+      const oppositeScript = readingInputScript.value === 'katakana' ? 'hiragana' : 'katakana';
+      const oppositeAccepted = getAcceptedReadingsForItem(current.value, oppositeScript);
+      const matchedOpposite = findMatchingAccepted(candidate, oppositeAccepted);
+
+      if (matchedOpposite) {
+        readingFeedback.value = readingInputScript.value === 'katakana'
+          ? 'Essa leitura corresponde a kun (hiragana). Troque para hiragana no ícone de conversão.'
+          : 'Essa leitura corresponde a on (katakana). Troque para katakana no ícone de conversão.';
+        return;
+      }
+
       registerAttempt(false);
-      readingFeedback.value = `Ainda não. Leituras aceitas:\n${formatAcceptedReadingsList(current.value)}`;
+      readingFeedback.value = `Ainda não. Leituras aceitas:\n${formatAcceptedReadingsList(current.value, readingInputScript.value)}`;
       return;
     }
 
@@ -354,6 +383,7 @@ export const useStudyStore = defineStore('study', () => {
       mode: mode.value,
       shuffle: shuffleEnabled.value,
       currentCardId: current.value ? current.value.id : null,
+      readingInputScript: readingInputScript.value,
       requireAllReadings: requireAllReadings.value,
     }));
   }
@@ -408,11 +438,13 @@ export const useStudyStore = defineStore('study', () => {
     totalCount,
     unknownCount,
     readingInput,
+    readingInputScript,
     readingFeedback,
     readingsTotalCount,
     readingsFoundCount,
-    readingsFoundPreview,
+    readingsOverallCount,
     setReadingInput,
+    setReadingInputScript,
     setRequireAllReadings,
     submitReadingAttempt,
     init,
@@ -466,6 +498,7 @@ function loadSession() {
     mode: 'flashcard',
     shuffle: true,
     currentCardId: null,
+    readingInputScript: 'hiragana',
     requireAllReadings: false,
   };
 
@@ -478,6 +511,7 @@ function loadSession() {
       mode: parsed.mode === 'quiz' ? 'quiz' : 'flashcard',
       shuffle: typeof parsed.shuffle === 'boolean' ? parsed.shuffle : true,
       currentCardId: Number.isInteger(parsed.currentCardId) ? parsed.currentCardId : null,
+      readingInputScript: parsed.readingInputScript === 'katakana' ? 'katakana' : 'hiragana',
       requireAllReadings: typeof parsed.requireAllReadings === 'boolean' ? parsed.requireAllReadings : false,
     };
   } catch {
@@ -549,12 +583,24 @@ function getAcceptedReadings(reading) {
   );
 }
 
-function getAcceptedReadingsForItem(item) {
+function getAcceptedReadingsForItem(item, script = 'hiragana') {
   if (!item) return [];
+
+  if (script === 'all') {
+    return unique([
+      ...getAcceptedReadings(item.kunReading),
+      ...getAcceptedReadings(item.onReading),
+    ]);
+  }
+
+  if (script === 'katakana') {
+    return unique([
+      ...getAcceptedReadings(item.onReading),
+    ]);
+  }
 
   return unique([
     ...getAcceptedReadings(item.kunReading),
-    ...getAcceptedReadings(item.onReading),
     ...getAcceptedReadings(item.reading),
   ]);
 }
@@ -572,16 +618,18 @@ function formatReadingsSummary(item) {
   return kun || on || '-';
 }
 
-function formatAcceptedReadingsList(item) {
-  const entries = getDisplayReadingsForItem(item);
+function formatAcceptedReadingsList(item, script = 'hiragana') {
+  const entries = getDisplayReadingsForItem(item, script);
   if (!entries.length) return '* -';
   return entries.map(entry => `* ${entry}`).join('\n');
 }
 
-function getDisplayReadingsForItem(item) {
-  const kunEntries = splitReadingTokens(item?.kunReading).map(token => `kun: ${token}`);
-  const onEntries = splitReadingTokens(item?.onReading).map(token => `on: ${token}`);
-  return unique([...kunEntries, ...onEntries]);
+function getDisplayReadingsForItem(item, script = 'hiragana') {
+  if (script === 'katakana') {
+    return unique(splitReadingTokens(item?.onReading).map(token => `on: ${token}`));
+  }
+
+  return unique(splitReadingTokens(item?.kunReading).map(token => `kun: ${token}`));
 }
 
 function splitReadingTokens(reading) {
@@ -591,13 +639,36 @@ function splitReadingTokens(reading) {
     .filter(Boolean);
 }
 
+function validateInputForScript(value, script) {
+  const raw = String(value || '');
+
+  if (script === 'katakana' && /[ぁ-んゔ]/.test(raw)) {
+    return 'No modo katakana, use katakana (leituras on).';
+  }
+
+  if (script === 'hiragana' && /[ァ-ヴ]/.test(raw)) {
+    return 'No modo hiragana, use hiragana (leituras kun).';
+  }
+
+  return '';
+}
+
 function normalizeKana(value) {
   const converted = wanakanaToHiragana(String(value || ''));
   return converted.replace(/[^ぁ-んー]/g, '');
 }
 
+function convertInputByScript(value, script) {
+  if (script === 'katakana') return toKatakanaInput(value);
+  return toHiraganaInput(value);
+}
+
 function toHiraganaInput(value) {
   return wanakanaToHiragana(String(value || ''), { IMEMode: true });
+}
+
+function toKatakanaInput(value) {
+  return wanakanaToKatakana(String(value || ''), { IMEMode: true });
 }
 
 function romajiToHiraganaToken(token) {

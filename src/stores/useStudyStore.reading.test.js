@@ -8,10 +8,15 @@ function splitReadingVariants(reading) {
     .filter(Boolean);
 }
 
-function acceptedVariantsForItem(item) {
+function acceptedVariantsForItem(item, script = 'hiragana') {
+  if (script === 'katakana') {
+    return [...new Set([
+      ...splitReadingVariants(item.onReading),
+    ])];
+  }
+
   return [...new Set([
     ...splitReadingVariants(item.kunReading),
-    ...splitReadingVariants(item.onReading),
     ...splitReadingVariants(item.reading),
   ])];
 }
@@ -33,6 +38,15 @@ describe('useStudyStore (reading)', () => {
     store.setReadingInput('gakkou');
 
     expect(store.readingInput).toBe('がっこう');
+  });
+
+  it('converte romaji para katakana quando script do input está em katakana', () => {
+    const store = createStore();
+
+    store.setReadingInputScript('katakana');
+    store.setReadingInput('gakkou');
+
+    expect(store.readingInput).toBe('ガッコウ');
   });
 
   it('limpa feedback de leitura ao digitar novamente', () => {
@@ -107,8 +121,10 @@ describe('useStudyStore (reading)', () => {
     expect(countFirstId).toBe(1);
   });
 
-  it('aceita leitura on como resposta correta no flashcard', () => {
+  it('aceita leitura on como resposta correta no modo katakana', () => {
     const store = createStore();
+
+    store.setReadingInputScript('katakana');
 
     const currentBefore = store.current;
     expect(currentBefore.onReading.length).toBeGreaterThan(0);
@@ -121,14 +137,43 @@ describe('useStudyStore (reading)', () => {
     expect(store.sessionStats.correct).toBe(1);
   });
 
+  it('não aceita leitura on no modo hiragana', () => {
+    const store = createStore();
+
+    const currentBefore = store.current;
+    expect(currentBefore.onReading.length).toBeGreaterThan(0);
+
+    const onReading = firstReadingVariant(currentBefore.onReading);
+    store.setReadingInput(onReading);
+    store.submitReadingAttempt();
+
+    expect(store.current.id).toBe(currentBefore.id);
+    expect(store.readingFeedback).toContain('corresponde a on (katakana)');
+  });
+
+  it('avisa explicitamente quando leitura on é digitada no modo hiragana', () => {
+    const store = createStore();
+
+    const target = store.sourceData.find(item => splitReadingVariants(item.onReading).length > 0);
+    expect(target).toBeTruthy();
+    moveToCard(store, target.id);
+
+    const onReading = firstReadingVariant(store.current.onReading);
+    store.setReadingInput(onReading);
+    store.submitReadingAttempt();
+
+    expect(store.readingFeedback).toContain('corresponde a on (katakana)');
+    expect(store.readingFeedback).toContain('Troque para katakana');
+  });
+
   it('modo completar todas só avança após registrar todas as leituras', () => {
     const store = createStore();
 
-    const target = store.sourceData.find(item => acceptedVariantsForItem(item).length >= 2);
+    const target = store.sourceData.find(item => acceptedVariantsForItem(item, 'hiragana').length >= 2);
     expect(target).toBeTruthy();
 
     moveToCard(store, target.id);
-    const variants = acceptedVariantsForItem(store.current);
+    const variants = acceptedVariantsForItem(store.current, 'hiragana');
     const firstId = store.current.id;
 
     store.setRequireAllReadings(true);
@@ -152,11 +197,11 @@ describe('useStudyStore (reading)', () => {
   it('modo completar todas não registra leitura repetida', () => {
     const store = createStore();
 
-    const target = store.sourceData.find(item => acceptedVariantsForItem(item).length >= 2);
+    const target = store.sourceData.find(item => acceptedVariantsForItem(item, 'hiragana').length >= 2);
     expect(target).toBeTruthy();
     moveToCard(store, target.id);
 
-    const firstVariant = acceptedVariantsForItem(store.current)[0];
+    const firstVariant = acceptedVariantsForItem(store.current, 'hiragana')[0];
 
     store.setRequireAllReadings(true);
     store.setReadingInput(firstVariant);

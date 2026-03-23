@@ -16,6 +16,7 @@ const {
   flashcardAnswer,
   flashcardHint,
   readingInput,
+  readingInputScript,
   readingFeedback,
   gridFilteredData,
   gridSearch,
@@ -27,7 +28,7 @@ const {
   quizFeedback,
   quizOptions,
   readingsFoundCount,
-  readingsFoundPreview,
+  readingsOverallCount,
   readingsTotalCount,
   requireAllReadings,
   selectedOption,
@@ -136,15 +137,17 @@ onUnmounted(() => {
       :flashcard-hint="flashcardHint"
       :flashcard-answer="flashcardAnswer"
       :reading-input="readingInput"
+      :reading-input-script="readingInputScript"
       :reading-feedback="readingFeedback"
       :require-all-readings="requireAllReadings"
       :readings-total-count="readingsTotalCount"
       :readings-found-count="readingsFoundCount"
-      :readings-found-preview="readingsFoundPreview"
+      :readings-overall-count="readingsOverallCount"
       :shuffle-enabled="shuffleEnabled"
       :transition-direction="transitionDirection"
       @set-shuffle="store.setShuffle"
       @set-require-all-readings="store.setRequireAllReadings"
+      @set-reading-input-script="store.setReadingInputScript"
       @show-hint="store.showFlashcardHint"
       @show-answer="store.showFlashcardAnswer"
       @update-reading="store.setReadingInput"

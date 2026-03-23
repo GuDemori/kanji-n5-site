@@ -63,6 +63,8 @@ npm run test:watch
 
 ## Docker
 
+### Produção (Nginx + build estática)
+
 Executar com Docker Compose:
 
 ```bash
@@ -107,6 +109,30 @@ make ps
 make logs
 make restart
 make rebuild
+```
+
+### Desenvolvimento com hot reload (recomendado para codar)
+
+Subir uma única vez:
+
+```bash
+make dev
+```
+
+Abrir:
+
+```text
+http://localhost:5173
+```
+
+Depois, ao editar arquivos em `src/`, a página atualiza sem `make down/up`.
+
+Comandos úteis:
+
+```bash
+make dev-logs
+make dev-ps
+make dev-down
 ```
 
 ## Atalhos de teclado
