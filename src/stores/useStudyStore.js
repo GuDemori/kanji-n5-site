@@ -64,6 +64,8 @@ export const useStudyStore = defineStore('study', () => {
   const flashcardAnswerVisible = ref(false);
   const readingInput = ref('');
   const readingFeedback = ref('');
+  const requireAllReadings = ref(initialSession.requireAllReadings);
+  const foundReadings = ref([]);
 
   const quizFeedback = ref('');
   const quizOptions = ref([]);
@@ -102,10 +104,15 @@ export const useStudyStore = defineStore('study', () => {
     if (!flashcardAnswerVisible.value || !current.value) return null;
     return {
       title: `${current.value.kanji} - ${current.value.meaning}`,
-      reading: current.value.reading,
+      reading: formatReadingsSummary(current.value),
       source: `Fonte no PDF: lição ${current.value.lesson}, página ${current.value.page}.`,
     };
   });
+
+  const currentAcceptedReadings = computed(() => getAcceptedReadingsForItem(current.value));
+  const readingsTotalCount = computed(() => currentAcceptedReadings.value.length);
+  const readingsFoundCount = computed(() => foundReadings.value.length);
+  const readingsFoundPreview = computed(() => foundReadings.value.join(' ・ '));
 
   const gridFilteredData = computed(() => {
     const query = normalizeSearchTerm(gridSearch.value);
@@ -193,6 +200,12 @@ export const useStudyStore = defineStore('study', () => {
     readingFeedback.value = '';
   }
 
+  function setRequireAllReadings(enabled) {
+    requireAllReadings.value = Boolean(enabled);
+    clearReadingProgress();
+    saveSession();
+  }
+
   function submitReadingAttempt() {
     if (!current.value) return;
 
@@ -202,18 +215,46 @@ export const useStudyStore = defineStore('study', () => {
       return;
     }
 
-    const accepted = getAcceptedReadings(current.value.reading);
-    const correct = isReadingMatch(candidate, accepted);
+    const accepted = currentAcceptedReadings.value;
+    if (!accepted.length) {
+      readingFeedback.value = 'Sem leituras cadastradas para este kanji.';
+      return;
+    }
 
-    registerAttempt(correct);
+    const matchedReading = findMatchingAccepted(candidate, accepted);
+    const correct = Boolean(matchedReading);
 
-    if (correct) {
+    if (!correct) {
+      registerAttempt(false);
+      readingFeedback.value = `Ainda não. Leituras aceitas:\n${formatAcceptedReadingsList(current.value)}`;
+      return;
+    }
+
+    if (!requireAllReadings.value) {
+      registerAttempt(true);
       markKnown(current.value.id);
       advanceAfterSuccess();
       return;
     }
 
-    readingFeedback.value = `Ainda não. Leitura correta: ${current.value.reading}.`;
+    if (foundReadings.value.includes(matchedReading)) {
+      readingFeedback.value = `Você já registrou "${matchedReading}".`;
+      readingInput.value = '';
+      return;
+    }
+
+    registerAttempt(true);
+    foundReadings.value = [...foundReadings.value, matchedReading];
+    readingInput.value = '';
+
+    if (foundReadings.value.length >= accepted.length) {
+      markKnown(current.value.id);
+      advanceAfterSuccess();
+      return;
+    }
+
+    const remaining = accepted.length - foundReadings.value.length;
+    readingFeedback.value = `Boa. ${foundReadings.value.length}/${accepted.length} leituras registradas. Faltam ${remaining}.`;
   }
 
   function showQuizHint() {
@@ -276,9 +317,14 @@ export const useStudyStore = defineStore('study', () => {
   function clearFeedbackPanels() {
     flashcardHint.value = '';
     flashcardAnswerVisible.value = false;
+    clearReadingProgress();
+    quizFeedback.value = '';
+  }
+
+  function clearReadingProgress() {
     readingInput.value = '';
     readingFeedback.value = '';
-    quizFeedback.value = '';
+    foundReadings.value = [];
   }
 
   function resetSessionStats() {
@@ -308,6 +354,7 @@ export const useStudyStore = defineStore('study', () => {
       mode: mode.value,
       shuffle: shuffleEnabled.value,
       currentCardId: current.value ? current.value.id : null,
+      requireAllReadings: requireAllReadings.value,
     }));
   }
 
@@ -343,6 +390,7 @@ export const useStudyStore = defineStore('study', () => {
     quizOptions,
     resetProgress,
     selectedOption,
+    requireAllReadings,
     sessionRate,
     sessionStats,
     sessionSummary,
@@ -361,7 +409,11 @@ export const useStudyStore = defineStore('study', () => {
     unknownCount,
     readingInput,
     readingFeedback,
+    readingsTotalCount,
+    readingsFoundCount,
+    readingsFoundPreview,
     setReadingInput,
+    setRequireAllReadings,
     submitReadingAttempt,
     init,
   };
@@ -414,6 +466,7 @@ function loadSession() {
     mode: 'flashcard',
     shuffle: true,
     currentCardId: null,
+    requireAllReadings: false,
   };
 
   try {
@@ -425,6 +478,7 @@ function loadSession() {
       mode: parsed.mode === 'quiz' ? 'quiz' : 'flashcard',
       shuffle: typeof parsed.shuffle === 'boolean' ? parsed.shuffle : true,
       currentCardId: Number.isInteger(parsed.currentCardId) ? parsed.currentCardId : null,
+      requireAllReadings: typeof parsed.requireAllReadings === 'boolean' ? parsed.requireAllReadings : false,
     };
   } catch {
     return fallback;
@@ -495,9 +549,46 @@ function getAcceptedReadings(reading) {
   );
 }
 
-function isReadingMatch(candidate, accepted) {
+function getAcceptedReadingsForItem(item) {
+  if (!item) return [];
+
+  return unique([
+    ...getAcceptedReadings(item.kunReading),
+    ...getAcceptedReadings(item.onReading),
+    ...getAcceptedReadings(item.reading),
+  ]);
+}
+
+function findMatchingAccepted(candidate, accepted) {
   const normalizedCandidate = candidate.replace(/\u30fc/g, '');
-  return accepted.some(item => item === candidate || item.replace(/\u30fc/g, '') === normalizedCandidate);
+  return accepted.find(item => item === candidate || item.replace(/\u30fc/g, '') === normalizedCandidate) || null;
+}
+
+function formatReadingsSummary(item) {
+  const kun = String(item?.kunReading || '').trim();
+  const on = String(item?.onReading || '').trim();
+
+  if (kun && on) return `kun: ${kun} | on: ${on}`;
+  return kun || on || '-';
+}
+
+function formatAcceptedReadingsList(item) {
+  const entries = getDisplayReadingsForItem(item);
+  if (!entries.length) return '* -';
+  return entries.map(entry => `* ${entry}`).join('\n');
+}
+
+function getDisplayReadingsForItem(item) {
+  const kunEntries = splitReadingTokens(item?.kunReading).map(token => `kun: ${token}`);
+  const onEntries = splitReadingTokens(item?.onReading).map(token => `on: ${token}`);
+  return unique([...kunEntries, ...onEntries]);
+}
+
+function splitReadingTokens(reading) {
+  return String(reading || '')
+    .split(/[・/、,\s]+/)
+    .map(part => part.trim())
+    .filter(Boolean);
 }
 
 function normalizeKana(value) {

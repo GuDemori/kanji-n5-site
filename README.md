@@ -61,6 +61,54 @@ npm test
 npm run test:watch
 ```
 
+## Docker
+
+Executar com Docker Compose:
+
+```bash
+docker compose up --build -d
+```
+
+Ou com Makefile (atalho recomendado):
+
+```bash
+make up
+```
+
+Aplicação disponível em:
+
+```text
+http://localhost:90
+```
+
+Parar container:
+
+```bash
+docker compose down
+```
+
+Com Makefile:
+
+```bash
+make down
+```
+
+Build e execução sem Compose:
+
+```bash
+docker build -t kanji-n5-site .
+docker run --rm -p 90:80 kanji-n5-site
+```
+
+Atalhos adicionais com Makefile:
+
+```bash
+make ps
+make logs
+make restart
+make rebuild
+```
+
 ## Atalhos de teclado
 
 - `←` / `→`: voltar/avançar cards

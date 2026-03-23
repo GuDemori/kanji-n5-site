@@ -1,0 +1,9 @@
+services:
+  kanji-n5-site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kanji-n5-site
+    ports:
+      - "90:80"
+    restart: unless-stopped

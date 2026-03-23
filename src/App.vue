@@ -26,6 +26,10 @@ const {
   quizAnswered,
   quizFeedback,
   quizOptions,
+  readingsFoundCount,
+  readingsFoundPreview,
+  readingsTotalCount,
+  requireAllReadings,
   selectedOption,
   sessionRate,
   sessionStats,
@@ -133,9 +137,14 @@ onUnmounted(() => {
       :flashcard-answer="flashcardAnswer"
       :reading-input="readingInput"
       :reading-feedback="readingFeedback"
+      :require-all-readings="requireAllReadings"
+      :readings-total-count="readingsTotalCount"
+      :readings-found-count="readingsFoundCount"
+      :readings-found-preview="readingsFoundPreview"
       :shuffle-enabled="shuffleEnabled"
       :transition-direction="transitionDirection"
       @set-shuffle="store.setShuffle"
+      @set-require-all-readings="store.setRequireAllReadings"
       @show-hint="store.showFlashcardHint"
       @show-answer="store.showFlashcardAnswer"
       @update-reading="store.setReadingInput"
