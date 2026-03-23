@@ -60,7 +60,8 @@ describe('useStudyStore (reading)', () => {
     store.submitReadingAttempt();
 
     expect(store.current.id).toBe(currentBefore.id);
-    expect(store.readingFeedback).toContain('Leitura correta');
+    expect(store.readingFeedback).toContain('Ainda não. Leituras aceitas:');
+    expect(store.readingFeedback).toContain('* ');
     expect(store.sessionStats.wrong).toBe(1);
   });
 
@@ -83,5 +84,54 @@ describe('useStudyStore (reading)', () => {
 
     const countFirstId = knownIds.filter(id => id === firstId).length;
     expect(countFirstId).toBe(1);
+  });
+
+  it('aceita leitura on como resposta correta no flashcard', () => {
+    const store = createStore();
+
+    const currentBefore = store.current;
+    expect(currentBefore.onReading.length).toBeGreaterThan(0);
+
+    const onReading = firstReadingVariant(currentBefore.onReading);
+    store.setReadingInput(onReading);
+    store.submitReadingAttempt();
+
+    expect(store.current.id).not.toBe(currentBefore.id);
+    expect(store.sessionStats.correct).toBe(1);
+  });
+
+  it('modo completar todas só avança após registrar todas as leituras', () => {
+    const store = createStore();
+    const firstId = store.current.id;
+
+    store.setRequireAllReadings(true);
+
+    store.setReadingInput('yama');
+    store.submitReadingAttempt();
+
+    expect(store.current.id).toBe(firstId);
+    expect(store.readingsFoundCount).toBe(1);
+    expect(store.readingFeedback).toContain('1/2');
+
+    store.setReadingInput('san');
+    store.submitReadingAttempt();
+
+    expect(store.current.id).not.toBe(firstId);
+  });
+
+  it('modo completar todas não registra leitura repetida', () => {
+    const store = createStore();
+
+    store.setRequireAllReadings(true);
+    store.setReadingInput('yama');
+    store.submitReadingAttempt();
+    const attemptsAfterFirst = store.sessionStats.attempts;
+
+    store.setReadingInput('yama');
+    store.submitReadingAttempt();
+
+    expect(store.sessionStats.attempts).toBe(attemptsAfterFirst);
+    expect(store.readingsFoundCount).toBe(1);
+    expect(store.readingFeedback).toContain('já registrou');
   });
 });

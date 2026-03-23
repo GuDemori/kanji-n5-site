@@ -32,6 +32,22 @@ defineProps({
     type: String,
     required: true,
   },
+  requireAllReadings: {
+    type: Boolean,
+    default: false,
+  },
+  readingsTotalCount: {
+    type: Number,
+    default: 0,
+  },
+  readingsFoundCount: {
+    type: Number,
+    default: 0,
+  },
+  readingsFoundPreview: {
+    type: String,
+    default: '',
+  },
   transitionDirection: {
     type: Number,
     required: true,
@@ -44,6 +60,7 @@ const emit = defineEmits([
   'move-prev',
   'move-next',
   'set-shuffle',
+  'set-require-all-readings',
   'update-reading',
   'submit-reading',
 ]);
@@ -89,6 +106,20 @@ const emit = defineEmits([
 
       <div class="rounded-xl border border-white/10 bg-white/5 p-3">
         <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">Leitura</p>
+        <label class="mb-2 inline-flex items-center gap-2 text-xs text-slate-300 select-none">
+          <input
+            type="checkbox"
+            :checked="requireAllReadings"
+            @change="emit('set-require-all-readings', $event.target.checked)"
+          >
+          Completar todas as leituras (opcional)
+        </label>
+        <p v-if="requireAllReadings" class="mb-2 text-xs text-sky-200">
+          Progresso: {{ readingsFoundCount }}/{{ readingsTotalCount }}
+        </p>
+        <p v-if="requireAllReadings && readingsFoundPreview" class="mb-2 text-xs text-slate-300">
+          Registradas: {{ readingsFoundPreview }}
+        </p>
         <div class="grid gap-2">
           <input
             type="text"
@@ -112,7 +143,7 @@ const emit = defineEmits([
       </div>
     </div>
 
-    <div v-if="readingFeedback" class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
+    <div v-if="readingFeedback" class="mt-4 whitespace-pre-line rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
       {{ readingFeedback }}
     </div>
 
@@ -122,7 +153,7 @@ const emit = defineEmits([
 
     <div v-if="flashcardAnswer" class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
       <strong class="block text-lg">{{ flashcardAnswer.title }}</strong>
-      <p class="mt-2">Leitura principal: {{ flashcardAnswer.reading }}</p>
+      <p class="mt-2">Leituras aceitas: {{ flashcardAnswer.reading }}</p>
       <p class="mt-1">{{ flashcardAnswer.source }}</p>
     </div>
   </section>

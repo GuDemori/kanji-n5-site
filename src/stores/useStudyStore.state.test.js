@@ -76,6 +76,7 @@ describe('useStudyStore (state)', () => {
 
     store.setMode('quiz');
     store.setShuffle(false);
+    store.setRequireAllReadings(true);
 
     const currentBefore = store.current;
     store.setReadingInput(firstReadingVariant(currentBefore.reading));
@@ -92,6 +93,7 @@ describe('useStudyStore (state)', () => {
 
     expect(session.mode).toBe('quiz');
     expect(typeof session.shuffle).toBe('boolean');
+    expect(session.requireAllReadings).toBe(true);
     expect(Array.isArray(progress.known)).toBe(true);
   });
 
