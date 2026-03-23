@@ -1,0 +1,17 @@
+services:
+  kanji-n5-site-dev:
+    image: node:22-alpine
+    container_name: kanji-n5-site-dev
+    working_dir: /app
+    command: sh -lc "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./:/app
+      - kanji_n5_node_modules:/app/node_modules
+    restart: unless-stopped
+
+volumes:
+  kanji_n5_node_modules:

@@ -61,6 +61,80 @@ npm test
 npm run test:watch
 ```
 
+## Docker
+
+### Produção (Nginx + build estática)
+
+Executar com Docker Compose:
+
+```bash
+docker compose up --build -d
+```
+
+Ou com Makefile (atalho recomendado):
+
+```bash
+make up
+```
+
+Aplicação disponível em:
+
+```text
+http://localhost:90
+```
+
+Parar container:
+
+```bash
+docker compose down
+```
+
+Com Makefile:
+
+```bash
+make down
+```
+
+Build e execução sem Compose:
+
+```bash
+docker build -t kanji-n5-site .
+docker run --rm -p 90:80 kanji-n5-site
+```
+
+Atalhos adicionais com Makefile:
+
+```bash
+make ps
+make logs
+make restart
+make rebuild
+```
+
+### Desenvolvimento com hot reload (recomendado para codar)
+
+Subir uma única vez:
+
+```bash
+make dev
+```
+
+Abrir:
+
+```text
+http://localhost:5173
+```
+
+Depois, ao editar arquivos em `src/`, a página atualiza sem `make down/up`.
+
+Comandos úteis:
+
+```bash
+make dev-logs
+make dev-ps
+make dev-down
+```
+
 ## Atalhos de teclado
 
 - `←` / `→`: voltar/avançar cards
