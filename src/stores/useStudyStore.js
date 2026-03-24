@@ -112,7 +112,8 @@ export const useStudyStore = defineStore('study', () => {
 
   const currentAcceptedReadings = computed(() => getAcceptedReadingsForItem(current.value, readingInputScript.value));
   const readingsTotalCount = computed(() => currentAcceptedReadings.value.length);
-  const readingsFoundCount = computed(() => foundReadings.value.length);
+  const readingsFoundCount = computed(() => currentAcceptedReadings.value.filter(item => foundReadings.value.includes(item)).length);
+  const readingsOverallFoundCount = computed(() => foundReadings.value.length);
   const readingsOverallCount = computed(() => getAcceptedReadingsForItem(current.value, 'all').length);
 
   const gridFilteredData = computed(() => {
@@ -232,6 +233,7 @@ export const useStudyStore = defineStore('study', () => {
     }
 
     const accepted = currentAcceptedReadings.value;
+    const acceptedAll = getAcceptedReadingsForItem(current.value, 'all');
     if (!accepted.length) {
       readingFeedback.value = readingInputScript.value === 'katakana'
         ? 'Sem leituras on cadastradas para este kanji.'
@@ -276,14 +278,23 @@ export const useStudyStore = defineStore('study', () => {
     foundReadings.value = [...foundReadings.value, matchedReading];
     readingInput.value = '';
 
-    if (foundReadings.value.length >= accepted.length) {
+    if (foundReadings.value.length >= acceptedAll.length) {
       markKnown(current.value.id);
       advanceAfterSuccess();
       return;
     }
 
-    const remaining = accepted.length - foundReadings.value.length;
-    readingFeedback.value = `Boa. ${foundReadings.value.length}/${accepted.length} leituras registradas. Faltam ${remaining}.`;
+    const remainingTotal = acceptedAll.length - foundReadings.value.length;
+    const remainingCurrentScript = accepted.filter(item => !foundReadings.value.includes(item)).length;
+
+    if (remainingCurrentScript === 0) {
+      readingFeedback.value = readingInputScript.value === 'katakana'
+        ? `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Troque para hiragana para continuar.`
+        : `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Troque para katakana para continuar.`;
+      return;
+    }
+
+    readingFeedback.value = `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Faltam ${remainingTotal}.`;
   }
 
   function showQuizHint() {
@@ -442,6 +453,7 @@ export const useStudyStore = defineStore('study', () => {
     readingFeedback,
     readingsTotalCount,
     readingsFoundCount,
+    readingsOverallFoundCount,
     readingsOverallCount,
     setReadingInput,
     setReadingInputScript,

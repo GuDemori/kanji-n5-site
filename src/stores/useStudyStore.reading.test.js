@@ -9,6 +9,14 @@ function splitReadingVariants(reading) {
 }
 
 function acceptedVariantsForItem(item, script = 'hiragana') {
+  if (script === 'all') {
+    return [...new Set([
+      ...splitReadingVariants(item.kunReading),
+      ...splitReadingVariants(item.onReading),
+      ...splitReadingVariants(item.reading),
+    ])];
+  }
+
   if (script === 'katakana') {
     return [...new Set([
       ...splitReadingVariants(item.onReading),
@@ -169,25 +177,35 @@ describe('useStudyStore (reading)', () => {
   it('modo completar todas só avança após registrar todas as leituras', () => {
     const store = createStore();
 
-    const target = store.sourceData.find(item => acceptedVariantsForItem(item, 'hiragana').length >= 2);
+    const target = store.sourceData.find(item => acceptedVariantsForItem(item, 'all').length >= 2);
     expect(target).toBeTruthy();
 
     moveToCard(store, target.id);
-    const variants = acceptedVariantsForItem(store.current, 'hiragana');
+    const kunVariants = acceptedVariantsForItem(store.current, 'hiragana');
+    const onVariants = acceptedVariantsForItem(store.current, 'katakana');
+    const totalVariants = acceptedVariantsForItem(store.current, 'all');
     const firstId = store.current.id;
 
     store.setRequireAllReadings(true);
 
-    store.setReadingInput(variants[0]);
+    store.setReadingInput(kunVariants[0]);
     store.submitReadingAttempt();
 
     expect(store.current.id).toBe(firstId);
     expect(store.readingsFoundCount).toBe(1);
-    expect(store.readingFeedback).toContain(`1/${variants.length}`);
+    expect(store.readingFeedback).toContain(`1/${totalVariants.length}`);
 
-    for (let i = 1; i < variants.length; i += 1) {
-      store.setReadingInput(variants[i]);
+    for (let i = 1; i < kunVariants.length; i += 1) {
+      store.setReadingInput(kunVariants[i]);
       store.submitReadingAttempt();
+    }
+
+    if (onVariants.length) {
+      store.setReadingInputScript('katakana');
+      for (const variant of onVariants) {
+        store.setReadingInput(variant);
+        store.submitReadingAttempt();
+      }
     }
 
     expect(store.readingsFoundCount).toBe(0);
