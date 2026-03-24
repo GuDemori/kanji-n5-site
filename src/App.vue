@@ -28,6 +28,7 @@ const {
   quizFeedback,
   quizOptions,
   readingsFoundCount,
+  readingsOverallFoundCount,
   readingsOverallCount,
   readingsTotalCount,
   requireAllReadings,
@@ -142,6 +143,7 @@ onUnmounted(() => {
       :require-all-readings="requireAllReadings"
       :readings-total-count="readingsTotalCount"
       :readings-found-count="readingsFoundCount"
+      :readings-overall-found-count="readingsOverallFoundCount"
       :readings-overall-count="readingsOverallCount"
       :shuffle-enabled="shuffleEnabled"
       :transition-direction="transitionDirection"

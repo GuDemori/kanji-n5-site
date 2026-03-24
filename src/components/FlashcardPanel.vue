@@ -50,6 +50,10 @@ defineProps({
     type: Number,
     default: 0,
   },
+  readingsOverallFoundCount: {
+    type: Number,
+    default: 0,
+  },
   readingsOverallCount: {
     type: Number,
     default: 0,
@@ -166,7 +170,7 @@ const emit = defineEmits([
     <div v-if="requireAllReadings" class="mt-4 rounded-xl border border-sky-400/20 bg-sky-500/10 px-3 py-2 text-sm text-sky-100">
       Treino completo ativo: {{ readingsFoundCount }}/{{ readingsTotalCount }}
       leituras {{ readingInputScript === 'katakana' ? 'on (katakana)' : 'kun (hiragana)' }} registradas.
-      Total deste kanji (leituras kun + on): {{ readingsOverallCount }}.
+      Total deste kanji (leituras kun + on): {{ readingsOverallFoundCount }}/{{ readingsOverallCount }}.
     </div>
 
     <div v-if="readingFeedback" class="mt-4 whitespace-pre-line rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
