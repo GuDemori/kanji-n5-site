@@ -1,5 +1,6 @@
 <script setup>
 import tradeIcon from '../trade.svg';
+import { useI18n } from '../i18n';
 
 defineProps({
   cardPosition: {
@@ -75,6 +76,8 @@ const emit = defineEmits([
   'update-reading',
   'submit-reading',
 ]);
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -87,7 +90,7 @@ const emit = defineEmits([
 
       <div class="flex flex-wrap items-center gap-3">
         <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-          <span class="font-semibold">Embaralhar</span>
+          <span class="font-semibold">{{ t('flashcard.shuffle') }}</span>
           <input
             type="checkbox"
             class="peer sr-only"
@@ -101,7 +104,7 @@ const emit = defineEmits([
         </label>
 
         <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-          <span class="font-semibold">Treino completo</span>
+          <span class="font-semibold">{{ t('flashcard.fullTraining') }}</span>
           <input
             type="checkbox"
             class="peer sr-only"
@@ -124,21 +127,21 @@ const emit = defineEmits([
 
     <div class="grid gap-3 lg:grid-cols-3">
       <div class="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-col">
-        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">Revelar</p>
+        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">{{ t('flashcard.reveal') }}</p>
         <div class="grid flex-1 grid-rows-2 gap-2">
-          <button type="button" class="action-ghost h-full" @click="emit('show-hint')">Mostrar dica</button>
-          <button type="button" class="action-main h-full" @click="emit('show-answer')">Revelar resposta</button>
+          <button type="button" class="action-ghost h-full" @click="emit('show-hint')">{{ t('flashcard.showHint') }}</button>
+          <button type="button" class="action-main h-full" @click="emit('show-answer')">{{ t('flashcard.showAnswer') }}</button>
         </div>
       </div>
 
       <div class="rounded-xl border border-white/10 bg-white/5 p-3">
-        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">Leitura</p>
+        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">{{ t('flashcard.reading') }}</p>
         <div class="grid gap-2">
           <div class="relative">
             <input
               type="text"
               :value="readingInput"
-              :placeholder="readingInputScript === 'katakana' ? 'Digite em romaji ou katakana' : 'Digite em romaji ou hiragana'"
+              :placeholder="readingInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : t('flashcard.inputHiraganaPlaceholder')"
               lang="ja"
               class="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 pr-11 text-slate-100"
               @input="emit('update-reading', $event.target.value)"
@@ -147,30 +150,36 @@ const emit = defineEmits([
             <button
               type="button"
               class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
-              :title="readingInputScript === 'katakana' ? 'Trocar conversão automática para hiragana' : 'Trocar conversão automática para katakana'"
-              :aria-label="readingInputScript === 'katakana' ? 'Trocar conversão automática para hiragana' : 'Trocar conversão automática para katakana'"
+              :title="readingInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
+              :aria-label="readingInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
               @click="emit('set-reading-input-script', readingInputScript === 'katakana' ? 'hiragana' : 'katakana')"
             >
               <img :src="tradeIcon" alt="" class="h-4 w-4 brightness-0 invert opacity-95">
             </button>
           </div>
-          <button type="button" class="action-main" @click="emit('submit-reading')">Verificar leitura</button>
+          <button type="button" class="action-main" @click="emit('submit-reading')">{{ t('flashcard.submitReading') }}</button>
         </div>
       </div>
 
       <div class="rounded-xl border border-white/10 bg-white/5 p-3 flex flex-col">
-        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">Navegação</p>
+        <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">{{ t('flashcard.navigation') }}</p>
         <div class="grid flex-1 grid-rows-2 gap-2">
-          <button type="button" class="action-ghost h-full" @click="emit('move-prev')">Anterior</button>
-          <button type="button" class="action-main h-full" @click="emit('move-next')">Próximo</button>
+          <button type="button" class="action-ghost h-full" @click="emit('move-prev')">{{ t('flashcard.previous') }}</button>
+          <button type="button" class="action-main h-full" @click="emit('move-next')">{{ t('flashcard.next') }}</button>
         </div>
       </div>
     </div>
 
     <div v-if="requireAllReadings" class="mt-4 rounded-xl border border-sky-400/20 bg-sky-500/10 px-3 py-2 text-sm text-sky-100">
-      Treino completo ativo: {{ readingsFoundCount }}/{{ readingsTotalCount }}
-      leituras {{ readingInputScript === 'katakana' ? 'on (katakana)' : 'kun (hiragana)' }} registradas.
-      Total deste kanji (leituras kun + on): {{ readingsOverallFoundCount }}/{{ readingsOverallCount }}.
+      {{ t('flashcard.fullTrainingStatus', {
+        found: readingsFoundCount,
+        total: readingsTotalCount,
+        script: readingInputScript === 'katakana' ? t('flashcard.scriptOn') : t('flashcard.scriptKun'),
+      }) }}
+      {{ t('flashcard.fullTrainingTotal', {
+        found: readingsOverallFoundCount,
+        total: readingsOverallCount,
+      }) }}
     </div>
 
     <div v-if="readingFeedback" class="mt-4 whitespace-pre-line rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
@@ -183,7 +192,7 @@ const emit = defineEmits([
 
     <div v-if="flashcardAnswer" class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-200">
       <strong class="block text-lg">{{ flashcardAnswer.title }}</strong>
-      <p class="mt-2">Leituras aceitas: {{ flashcardAnswer.reading }}</p>
+      <p class="mt-2">{{ t('flashcard.acceptedReadings') }} {{ flashcardAnswer.reading }}</p>
       <p class="mt-1">{{ flashcardAnswer.source }}</p>
     </div>
   </section>
