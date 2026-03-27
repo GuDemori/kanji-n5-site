@@ -1,4 +1,6 @@
 <script setup>
+import { useI18n } from '../i18n';
+
 const props = defineProps({
   cardPosition: {
     type: String,
@@ -43,6 +45,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["answer", "show-hint", "next", "set-shuffle"]);
+const { t } = useI18n();
 
 function optionClasses(option) {
   if (!props.quizAnswered) {
@@ -73,7 +76,7 @@ function optionClasses(option) {
       </div>
 
       <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-        <span class="font-semibold">Embaralhar</span>
+        <span class="font-semibold">{{ t('flashcard.shuffle') }}</span>
         <input
           type="checkbox"
           class="peer sr-only"
@@ -87,8 +90,8 @@ function optionClasses(option) {
       </label>
     </div>
 
-    <p class="text-slate-400">Qual é o significado deste kanji?</p>
-    <p class="mt-1 text-xs text-sky-200">Atalhos: 1-4 responde, Enter vai para a próxima, Esc fecha dicas.</p>
+    <p class="text-slate-400">{{ t('quiz.question') }}</p>
+    <p class="mt-1 text-xs text-sky-200">{{ t('quiz.shortcuts') }}</p>
 
     <Transition :name="transitionDirection < 0 ? 'card-roulette-up' : 'card-roulette-down'" mode="out-in">
       <div :key="currentKanji" class="kanji-panel mb-4 mt-3 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
@@ -115,8 +118,8 @@ function optionClasses(option) {
     </div>
 
     <div class="mt-4 grid grid-cols-2 gap-2">
-      <button type="button" class="action-ghost" @click="emit('show-hint')">Mostrar dica</button>
-      <button type="button" class="action-main" :disabled="!quizAnswered" @click="emit('next')">Próxima pergunta</button>
+      <button type="button" class="action-ghost" @click="emit('show-hint')">{{ t('quiz.showHint') }}</button>
+      <button type="button" class="action-main" :disabled="!quizAnswered" @click="emit('next')">{{ t('quiz.nextQuestion') }}</button>
     </div>
   </section>
 </template>

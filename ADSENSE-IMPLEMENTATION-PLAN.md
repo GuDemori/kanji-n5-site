@@ -148,13 +148,13 @@ Legenda:
 - `[ ]` pendente
 - `[-]` depende de publicação/plataforma externa
 
-Status de referência: `2026-03-23`.
+Status de referência: `2026-03-24`.
 
 ### Fase 0 - i18n
 
 - [ ] Estratégia de URL por idioma definida.
-- [ ] Infra de traduções implementada.
-- [ ] Textos da UI extraídos para dicionário.
+- [x] Infra de traduções implementada.
+- [x] Textos da UI extraídos para dicionário.
 - [ ] Páginas institucionais preparadas para locale.
 
 ### Fase 1 - Conteúdo

@@ -143,14 +143,14 @@ Legenda:
 - `[ ]` pendente
 - `[-]` depende de informação externa/publicação
 
-Status de referência: `2026-03-23` (com base no repositório local atual).
+Status de referência: `2026-03-24` (com base no repositório local atual).
 
 ### Produto e arquitetura
 
 - [x] Projeto web estático (Vite + Vue) existente e buildável.
 - [x] Página principal do produto existe.
 - [ ] Páginas institucionais públicas implementadas no build.
-- [ ] Estratégia de i18n definida e aplicada nas páginas institucionais.
+- [-] Estratégia de i18n definida e aplicada nas páginas institucionais (infra iniciada na UI; páginas institucionais ainda pendentes).
 
 ### Conteúdo e compliance
 

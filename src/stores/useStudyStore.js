@@ -2,6 +2,7 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { toHiragana as wanakanaToHiragana, toKatakana as wanakanaToKatakana } from 'wanakana';
 import { kanjiData } from '../data/kanjiData';
+import { t } from '../i18n';
 
 const STORAGE_KEY = 'kanji-n5-progress-v1';
 const SESSION_KEY = 'kanji-n5-session-v1';
@@ -86,9 +87,9 @@ export const useStudyStore = defineStore('study', () => {
   });
 
   const sessionSummary = computed(() => {
-    const modeLabel = mode.value === 'quiz' ? 'Quiz' : 'Flashcards';
-    const shuffleLabel = shuffleEnabled.value ? 'embaralhar: ligado' : 'embaralhar: desligado';
-    return `${modeLabel} | ${shuffleLabel} | ${deck.value.length} kanji no treino`;
+    const modeLabel = mode.value === 'quiz' ? t('app.quiz') : t('app.flashcards');
+    const shuffleLabel = shuffleEnabled.value ? t('store.shuffleOn') : t('store.shuffleOff');
+    return t('store.sessionSummary', { mode: modeLabel, shuffle: shuffleLabel, count: deck.value.length });
   });
 
   const cardPosition = computed(() => {
@@ -97,8 +98,8 @@ export const useStudyStore = defineStore('study', () => {
   });
 
   const sourceLabel = computed(() => {
-    if (!current.value) return 'Sem itens';
-    return `Lição ${current.value.lesson} - p. ${current.value.page}`;
+    if (!current.value) return t('store.noItems');
+    return t('store.sourceLabel', { lesson: current.value.lesson, page: current.value.page });
   });
 
   const flashcardAnswer = computed(() => {
@@ -106,7 +107,7 @@ export const useStudyStore = defineStore('study', () => {
     return {
       title: `${current.value.kanji} - ${current.value.meaning}`,
       reading: formatReadingsSummary(current.value),
-      source: `Fonte no PDF: lição ${current.value.lesson}, página ${current.value.page}.`,
+      source: t('flashcard.pdfSource', { lesson: current.value.lesson, page: current.value.page }),
     };
   });
 
@@ -227,8 +228,8 @@ export const useStudyStore = defineStore('study', () => {
     const candidate = normalizeKana(readingInput.value);
     if (!candidate) {
       readingFeedback.value = readingInputScript.value === 'katakana'
-        ? 'Digite a leitura em katakana.'
-        : 'Digite a leitura em hiragana.';
+        ? t('store.inputKatakanaRequired')
+        : t('store.inputHiraganaRequired');
       return;
     }
 
@@ -236,8 +237,8 @@ export const useStudyStore = defineStore('study', () => {
     const acceptedAll = getAcceptedReadingsForItem(current.value, 'all');
     if (!accepted.length) {
       readingFeedback.value = readingInputScript.value === 'katakana'
-        ? 'Sem leituras on cadastradas para este kanji.'
-        : 'Sem leituras kun cadastradas para este kanji.';
+        ? t('store.noOnReadings')
+        : t('store.noKunReadings');
       return;
     }
 
@@ -251,13 +252,13 @@ export const useStudyStore = defineStore('study', () => {
 
       if (matchedOpposite) {
         readingFeedback.value = readingInputScript.value === 'katakana'
-          ? 'Essa leitura corresponde a kun (hiragana). Troque para hiragana no ícone de conversão.'
-          : 'Essa leitura corresponde a on (katakana). Troque para katakana no ícone de conversão.';
+          ? t('store.wrongScriptKun')
+          : t('store.wrongScriptOn');
         return;
       }
 
       registerAttempt(false);
-      readingFeedback.value = `Ainda não. Leituras aceitas:\n${formatAcceptedReadingsList(current.value, readingInputScript.value)}`;
+      readingFeedback.value = t('store.wrongAnswer', { list: formatAcceptedReadingsList(current.value, readingInputScript.value) });
       return;
     }
 
@@ -269,7 +270,7 @@ export const useStudyStore = defineStore('study', () => {
     }
 
     if (foundReadings.value.includes(matchedReading)) {
-      readingFeedback.value = `Você já registrou "${matchedReading}".`;
+      readingFeedback.value = t('store.alreadyRegistered', { reading: matchedReading });
       readingInput.value = '';
       return;
     }
@@ -289,12 +290,16 @@ export const useStudyStore = defineStore('study', () => {
 
     if (remainingCurrentScript === 0) {
       readingFeedback.value = readingInputScript.value === 'katakana'
-        ? `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Troque para hiragana para continuar.`
-        : `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Troque para katakana para continuar.`;
+        ? t('store.goodSwitchHiragana', { found: foundReadings.value.length, total: acceptedAll.length })
+        : t('store.goodSwitchKatakana', { found: foundReadings.value.length, total: acceptedAll.length });
       return;
     }
 
-    readingFeedback.value = `Boa. ${foundReadings.value.length}/${acceptedAll.length} leituras totais registradas. Faltam ${remainingTotal}.`;
+    readingFeedback.value = t('store.goodRemaining', {
+      found: foundReadings.value.length,
+      total: acceptedAll.length,
+      remaining: remainingTotal,
+    });
   }
 
   function showQuizHint() {
@@ -312,8 +317,15 @@ export const useStudyStore = defineStore('study', () => {
     registerAttempt(isCorrect);
 
     quizFeedback.value = isCorrect
-      ? `Boa. ${current.value.kanji} = ${current.value.meaning}. Leitura: ${current.value.reading}.`
-      : `Quase. A resposta certa é ${current.value.meaning}. Dica: ${current.value.hintText}`;
+      ? t('store.quizCorrect', {
+        kanji: current.value.kanji,
+        meaning: current.value.meaning,
+        reading: current.value.reading,
+      })
+      : t('store.quizWrong', {
+        meaning: current.value.meaning,
+        hint: current.value.hintText,
+      });
   }
 
   function markKnown(id) {
@@ -330,9 +342,9 @@ export const useStudyStore = defineStore('study', () => {
   }
 
   function getProgressState(id) {
-    if (progress.value.known.includes(id)) return 'Sabia';
-    if (progress.value.unknown.includes(id)) return 'Não sabia';
-    return 'Sem marcação';
+    if (progress.value.known.includes(id)) return t('store.known');
+    if (progress.value.unknown.includes(id)) return t('store.unknown');
+    return t('store.unmarked');
   }
 
   function prepareQuizOptions() {
@@ -655,11 +667,11 @@ function validateInputForScript(value, script) {
   const raw = String(value || '');
 
   if (script === 'katakana' && /[ぁ-んゔ]/.test(raw)) {
-    return 'No modo katakana, use katakana (leituras on).';
+    return t('store.inputKatakanaMode');
   }
 
   if (script === 'hiragana' && /[ァ-ヴ]/.test(raw)) {
-    return 'No modo hiragana, use hiragana (leituras kun).';
+    return t('store.inputHiraganaMode');
   }
 
   return '';
