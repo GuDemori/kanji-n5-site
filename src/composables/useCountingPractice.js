@@ -4,7 +4,7 @@ import { useI18n } from '../i18n';
 
 const COUNTING_TYPES = ['general', 'people', 'mai', 'dai', 'kai'];
 const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, '?'];
-const SEQUENTIAL_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const SEQUENTIAL_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, '?'];
 
 const numberKanji = {
   1: '一',
