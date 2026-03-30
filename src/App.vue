@@ -2,12 +2,19 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import HeroHeader from './components/HeroHeader.vue';
+import PracticeRouteTabs from './components/PracticeRouteTabs.vue';
 import StudyToolbar from './components/StudyToolbar.vue';
 import SessionMetrics from './components/SessionMetrics.vue';
 import FlashcardPanel from './components/FlashcardPanel.vue';
 import QuizPanel from './components/QuizPanel.vue';
 import KanjiGridPanel from './components/KanjiGridPanel.vue';
+import CountingPracticeView from './components/CountingPracticeView.vue';
 import { useStudyStore } from './stores/useStudyStore';
+
+function getCurrentPath() {
+  if (typeof window === 'undefined') return '/';
+  return window.location.pathname === '/counting' ? '/counting' : '/';
+}
 
 const store = useStudyStore();
 const {
@@ -46,6 +53,8 @@ const isFlashcard = computed(() => mode.value === 'flashcard');
 const currentKanji = computed(() => (current.value ? current.value.kanji : '-'));
 const currentMeaning = computed(() => (current.value ? current.value.meaning : ''));
 const transitionDirection = ref(1);
+const currentPath = ref(getCurrentPath());
+const isCountingRoute = computed(() => currentPath.value === '/counting');
 
 function moveCardWithDirection(delta) {
   transitionDirection.value = delta < 0 ? -1 : 1;
@@ -53,6 +62,8 @@ function moveCardWithDirection(delta) {
 }
 
 function handleKeydown(event) {
+  if (isCountingRoute.value) return;
+
   if (event.altKey || event.ctrlKey || event.metaKey) return;
 
   const targetTag = event.target && event.target.tagName;
@@ -88,6 +99,7 @@ function handleKeydown(event) {
 }
 
 function handleOutsideClick(event) {
+  if (isCountingRoute.value) return;
   if (!helpOpen.value) return;
 
   const helpWrap = event.target.closest('[data-help-wrap]');
@@ -96,93 +108,113 @@ function handleOutsideClick(event) {
   }
 }
 
+function navigate(path) {
+  const target = path === '/counting' ? '/counting' : '/';
+  if (target === currentPath.value) return;
+
+  window.history.pushState({}, '', target);
+  currentPath.value = target;
+}
+
+function handlePopState() {
+  currentPath.value = getCurrentPath();
+}
+
 onMounted(() => {
   store.init();
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('click', handleOutsideClick);
+  window.addEventListener('popstate', handlePopState);
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
   document.removeEventListener('click', handleOutsideClick);
+  window.removeEventListener('popstate', handlePopState);
 });
 </script>
 
 <template>
   <main class="mx-auto w-[min(1100px,calc(100%-32px))] py-8 text-slate-100 md:py-10">
-    <HeroHeader
-      :session-summary="sessionSummary"
-      :total-count="totalCount"
-      :known-count="knownCount"
-      :unknown-count="unknownCount"
-      :help-open="helpOpen"
-      @toggle-help="store.toggleHelpTooltip"
-    />
+    <PracticeRouteTabs :current-path="currentPath" @navigate="navigate" />
 
-    <StudyToolbar
-      :is-flashcard="isFlashcard"
-      @set-mode="store.setMode"
-      @reset-progress="store.resetProgress"
-    />
+    <CountingPracticeView v-if="isCountingRoute" />
 
-    <SessionMetrics
-      :session-stats="sessionStats"
-      :session-rate="sessionRate"
-    />
+    <template v-else>
+      <HeroHeader
+        :session-summary="sessionSummary"
+        :total-count="totalCount"
+        :known-count="knownCount"
+        :unknown-count="unknownCount"
+        :help-open="helpOpen"
+        @toggle-help="store.toggleHelpTooltip"
+      />
 
-    <FlashcardPanel
-      v-if="isFlashcard"
-      :card-position="cardPosition"
-      :source-label="sourceLabel"
-      :current-kanji="currentKanji"
-      :flashcard-hint="flashcardHint"
-      :flashcard-answer="flashcardAnswer"
-      :reading-input="readingInput"
-      :reading-input-script="readingInputScript"
-      :reading-feedback="readingFeedback"
-      :require-all-readings="requireAllReadings"
-      :readings-total-count="readingsTotalCount"
-      :readings-found-count="readingsFoundCount"
-      :readings-overall-found-count="readingsOverallFoundCount"
-      :readings-overall-count="readingsOverallCount"
-      :shuffle-enabled="shuffleEnabled"
-      :transition-direction="transitionDirection"
-      @set-shuffle="store.setShuffle"
-      @set-require-all-readings="store.setRequireAllReadings"
-      @set-reading-input-script="store.setReadingInputScript"
-      @show-hint="store.showFlashcardHint"
-      @show-answer="store.showFlashcardAnswer"
-      @update-reading="store.setReadingInput"
-      @submit-reading="store.submitReadingAttempt"
-      @move-prev="moveCardWithDirection(-1)"
-      @move-next="moveCardWithDirection(1)"
-    />
+      <StudyToolbar
+        :is-flashcard="isFlashcard"
+        @set-mode="store.setMode"
+        @reset-progress="store.resetProgress"
+      />
 
-    <QuizPanel
-      v-else
-      :card-position="cardPosition"
-      :source-label="sourceLabel"
-      :current-kanji="currentKanji"
-      :quiz-options="quizOptions"
-      :quiz-answered="quizAnswered"
-      :quiz-feedback="quizFeedback"
-      :selected-option="selectedOption"
-      :correct-meaning="currentMeaning"
-      :shuffle-enabled="shuffleEnabled"
-      :transition-direction="transitionDirection"
-      @set-shuffle="store.setShuffle"
-      @answer="store.answerQuiz"
-      @show-hint="store.showQuizHint"
-      @next="moveCardWithDirection(1)"
-    />
+      <SessionMetrics
+        :session-stats="sessionStats"
+        :session-rate="sessionRate"
+      />
 
-    <KanjiGridPanel
-      :grid-search="gridSearch"
-      :grid-status-filter="gridStatusFilter"
-      :grid-filtered-data="gridFilteredData"
-      :get-progress-state="store.getProgressState"
-      @update:grid-search="store.gridSearch = $event"
-      @update:grid-status="store.gridStatusFilter = $event"
-    />
+      <FlashcardPanel
+        v-if="isFlashcard"
+        :card-position="cardPosition"
+        :source-label="sourceLabel"
+        :current-kanji="currentKanji"
+        :flashcard-hint="flashcardHint"
+        :flashcard-answer="flashcardAnswer"
+        :reading-input="readingInput"
+        :reading-input-script="readingInputScript"
+        :reading-feedback="readingFeedback"
+        :require-all-readings="requireAllReadings"
+        :readings-total-count="readingsTotalCount"
+        :readings-found-count="readingsFoundCount"
+        :readings-overall-found-count="readingsOverallFoundCount"
+        :readings-overall-count="readingsOverallCount"
+        :shuffle-enabled="shuffleEnabled"
+        :transition-direction="transitionDirection"
+        @set-shuffle="store.setShuffle"
+        @set-require-all-readings="store.setRequireAllReadings"
+        @set-reading-input-script="store.setReadingInputScript"
+        @show-hint="store.showFlashcardHint"
+        @show-answer="store.showFlashcardAnswer"
+        @update-reading="store.setReadingInput"
+        @submit-reading="store.submitReadingAttempt"
+        @move-prev="moveCardWithDirection(-1)"
+        @move-next="moveCardWithDirection(1)"
+      />
+
+      <QuizPanel
+        v-else
+        :card-position="cardPosition"
+        :source-label="sourceLabel"
+        :current-kanji="currentKanji"
+        :quiz-options="quizOptions"
+        :quiz-answered="quizAnswered"
+        :quiz-feedback="quizFeedback"
+        :selected-option="selectedOption"
+        :correct-meaning="currentMeaning"
+        :shuffle-enabled="shuffleEnabled"
+        :transition-direction="transitionDirection"
+        @set-shuffle="store.setShuffle"
+        @answer="store.answerQuiz"
+        @show-hint="store.showQuizHint"
+        @next="moveCardWithDirection(1)"
+      />
+
+      <KanjiGridPanel
+        :grid-search="gridSearch"
+        :grid-status-filter="gridStatusFilter"
+        :grid-filtered-data="gridFilteredData"
+        :get-progress-state="store.getProgressState"
+        @update:grid-search="store.gridSearch = $event"
+        @update:grid-status="store.gridStatusFilter = $event"
+      />
+    </template>
   </main>
 </template>
