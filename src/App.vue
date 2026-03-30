@@ -13,6 +13,10 @@ import { useStudyStore } from './stores/useStudyStore';
 
 function getCurrentPath() {
   if (typeof window === 'undefined') return '/';
+
+  const redirectedPath = new URLSearchParams(window.location.search).get('p');
+  if (redirectedPath === '/counting') return '/counting';
+
   return window.location.pathname === '/counting' ? '/counting' : '/';
 }
 
@@ -121,6 +125,12 @@ function handlePopState() {
 }
 
 onMounted(() => {
+  const redirectedPath = new URLSearchParams(window.location.search).get('p');
+  if (redirectedPath === '/counting' && window.location.pathname !== '/counting') {
+    window.history.replaceState({}, '', '/counting');
+    currentPath.value = '/counting';
+  }
+
   store.init();
   document.addEventListener('keydown', handleKeydown);
   document.addEventListener('click', handleOutsideClick);

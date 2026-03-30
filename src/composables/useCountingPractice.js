@@ -230,6 +230,7 @@ export function useCountingPractice() {
 
   function onTypeChange(value) {
     selectedType.value = value;
+    sequentialIndex.value = 0;
     if (!shuffleEnabled.value) {
       nextPrompt();
     }

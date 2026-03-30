@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecionando...</title>
+  </head>
+  <body>
+    <script>
+      (function () {
+        var path = window.location.pathname;
+        var knownRoute = '/counting';
+        var normalized = path.endsWith('/') ? path.slice(0, -1) : path;
+        var matchesCounting = normalized === knownRoute || normalized.endsWith(knownRoute);
+
+        if (!matchesCounting) {
+          window.location.replace('/');
+          return;
+        }
+
+        var routeIndex = normalized.lastIndexOf(knownRoute);
+        var basePath = normalized.slice(0, routeIndex);
+        var origin = window.location.origin;
+        var baseUrl = basePath ? basePath + '/' : '/';
+        var destination = origin + baseUrl + '?p=' + encodeURIComponent(knownRoute);
+
+        window.location.replace(destination);
+      })();
+    </script>
+  </body>
+</html>

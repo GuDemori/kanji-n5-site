@@ -35,4 +35,22 @@ describe('useCountingPractice', () => {
       expect(foundQuestion).toBe(true);
     }
   });
+
+  it('ao trocar tipo com sequência ativa, reinicia no número 1 do novo tipo', () => {
+    const practice = useCountingPractice();
+    practice.onShuffleChange(false);
+    practice.onSequentialChange(true);
+
+    practice.nextPrompt();
+    practice.nextPrompt();
+    practice.nextPrompt();
+
+    expect(practice.currentPrompt.value.number).toBe(4);
+
+    practice.onTypeChange('dai');
+
+    expect(practice.currentPrompt.value.type).toBe('dai');
+    expect(practice.currentPrompt.value.number).toBe(1);
+    expect(practice.currentPrompt.value.counterLabel).toBe('一台');
+  });
 });

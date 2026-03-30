@@ -47,6 +47,14 @@ npm run build
 npm run preview
 ```
 
+## Rotas e refresh (SPA)
+
+A aplicação usa rota interna para `/counting`. Se o deploy for estático e não tiver fallback de SPA, atualizar a página nessa rota pode gerar `404`.
+
+Este projeto já inclui `public/404.html` para redirecionar `/counting` de volta ao `index.html` em hosts estáticos (ex.: GitHub Pages).
+
+Em servidores configuráveis (Nginx, Netlify, Vercel), mantenha também o rewrite padrão para `index.html`.
+
 ## Testes
 
 - Rodar testes uma vez:
