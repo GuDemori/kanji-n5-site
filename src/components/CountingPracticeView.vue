@@ -1,6 +1,8 @@
 <script setup>
+import CheckAnswerButton from './CheckAnswerButton.vue';
 import { computed } from 'vue';
 import BaseSelect from './BaseSelect.vue';
+import KanaInput from './KanaInput.vue';
 import SessionMetrics from './SessionMetrics.vue';
 import { useI18n } from '../i18n';
 import { useCountingPractice } from '../composables/useCountingPractice';
@@ -96,16 +98,13 @@ const glossaryOptions = computed(() => [
       </div>
 
       <div class="grid gap-2 md:grid-cols-[1fr_220px_220px]">
-        <input
-          :value="answerInput"
-          type="text"
+        <KanaInput
+          :model-value="answerInput"
           :placeholder="t('counting.inputPlaceholder')"
-          lang="ja"
-          class="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
-          @input="setInput($event.target.value)"
-          @keyup.enter="submitAnswer"
-        >
-        <button type="button" class="action-main" @click="submitAnswer">{{ t('counting.check') }}</button>
+          @update:model-value="setInput"
+          @enter="submitAnswer"
+        />
+        <CheckAnswerButton :label="t('counting.check')" @click="submitAnswer" />
         <button type="button" class="action-ghost" @click="nextPrompt">{{ t('counting.next') }}</button>
       </div>
 

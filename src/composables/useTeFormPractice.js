@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue';
+import { toHiragana as wanakanaToHiragana, toKatakana as wanakanaToKatakana } from 'wanakana';
 import { teFormVerbData } from '../data/teFormVerbData';
 import { useI18n } from '../i18n';
 
@@ -30,7 +31,7 @@ export function normalizeSearchTerm(value) {
 }
 
 export function isTeFormAnswerCorrect(candidate, expected) {
-  return String(candidate || '').trim() === expected;
+  return normalizeKana(candidate) === normalizeKana(expected);
 }
 
 export function isTranslationAnswerCorrect(candidate, expected) {
@@ -44,6 +45,7 @@ export function useTeFormPractice(verbs = teFormVerbData) {
   const teFormEnabled = ref(true);
   const translationEnabled = ref(false);
   const teFormInput = ref('');
+  const teFormInputScript = ref('hiragana');
   const translationInput = ref('');
   const verbListSearch = ref('');
   const verbListFilter = ref('verb');
@@ -82,6 +84,7 @@ export function useTeFormPractice(verbs = teFormVerbData) {
 
   function clearAnswer() {
     teFormInput.value = '';
+    teFormInputScript.value = 'hiragana';
     translationInput.value = '';
     feedback.value = '';
     feedbackState.value = 'idle';
@@ -126,6 +129,23 @@ export function useTeFormPractice(verbs = teFormVerbData) {
         teForm: currentVerb.value.teForm,
         translation: currentVerb.value.translation,
       });
+
+    if (correct) {
+      nextVerb();
+    }
+  }
+
+  function setTeFormInput(value) {
+    teFormInput.value = teFormInputScript.value === 'katakana'
+      ? wanakanaToKatakana(String(value || ''), { IMEMode: true })
+      : wanakanaToHiragana(String(value || ''), { IMEMode: true });
+    feedback.value = '';
+    feedbackState.value = 'idle';
+  }
+
+  function toggleTeFormInputScript() {
+    teFormInputScript.value = teFormInputScript.value === 'katakana' ? 'hiragana' : 'katakana';
+    setTeFormInput(teFormInput.value);
   }
 
   function setTeFormEnabled(value) {
@@ -146,6 +166,7 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     teFormEnabled,
     translationEnabled,
     teFormInput,
+    teFormInputScript,
     translationInput,
     verbListSearch,
     verbListFilter,
@@ -156,7 +177,14 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     sessionRate,
     nextVerb,
     submitAnswer,
+    setTeFormInput,
+    toggleTeFormInputScript,
     setTeFormEnabled,
     setTranslationEnabled,
   };
+}
+
+function normalizeKana(value) {
+  const converted = wanakanaToHiragana(String(value || '').trim());
+  return converted.replace(/[^ぁ-んー]/g, '');
 }

@@ -1,5 +1,6 @@
 <script setup>
-import tradeIcon from '../trade.svg';
+import CheckAnswerButton from './CheckAnswerButton.vue';
+import KanaInput from './KanaInput.vue';
 import { useI18n } from '../i18n';
 
 defineProps({
@@ -137,27 +138,16 @@ const { t } = useI18n();
       <div class="rounded-xl border border-white/10 bg-white/5 p-3">
         <p class="mb-2 text-xs uppercase tracking-wide text-slate-400">{{ t('flashcard.reading') }}</p>
         <div class="grid gap-2">
-          <div class="relative">
-            <input
-              type="text"
-              :value="readingInput"
-              :placeholder="readingInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : t('flashcard.inputHiraganaPlaceholder')"
-              lang="ja"
-              class="w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 pr-11 text-slate-100"
-              @input="emit('update-reading', $event.target.value)"
-              @keyup.enter="emit('submit-reading')"
-            >
-            <button
-              type="button"
-              class="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
-              :title="readingInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
-              :aria-label="readingInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
-              @click="emit('set-reading-input-script', readingInputScript === 'katakana' ? 'hiragana' : 'katakana')"
-            >
-              <img :src="tradeIcon" alt="" class="h-4 w-4 brightness-0 invert opacity-95">
-            </button>
-          </div>
-          <button type="button" class="action-main" @click="emit('submit-reading')">{{ t('flashcard.submitReading') }}</button>
+          <KanaInput
+            :model-value="readingInput"
+            :placeholder="readingInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : t('flashcard.inputHiraganaPlaceholder')"
+            :show-script-toggle="true"
+            :switch-title="readingInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
+            @update:model-value="emit('update-reading', $event)"
+            @toggle-script="emit('set-reading-input-script', readingInputScript === 'katakana' ? 'hiragana' : 'katakana')"
+            @enter="emit('submit-reading')"
+          />
+          <CheckAnswerButton :label="t('flashcard.submitReading')" @click="emit('submit-reading')" />
         </div>
       </div>
 

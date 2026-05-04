@@ -1,6 +1,8 @@
 <script setup>
+import CheckAnswerButton from './CheckAnswerButton.vue';
 import { computed } from 'vue';
 import BaseSelect from './BaseSelect.vue';
+import KanaInput from './KanaInput.vue';
 import SessionMetrics from './SessionMetrics.vue';
 import { useI18n } from '../i18n';
 import { useTeFormPractice } from '../composables/useTeFormPractice';
@@ -13,6 +15,7 @@ const {
   translationEnabled,
   teFormInput,
   translationInput,
+  teFormInputScript,
   verbListSearch,
   verbListFilter,
   filteredVerbList,
@@ -22,6 +25,8 @@ const {
   sessionRate,
   nextVerb,
   submitAnswer,
+  setTeFormInput,
+  toggleTeFormInputScript,
   setTeFormEnabled,
   setTranslationEnabled,
 } = useTeFormPractice();
@@ -80,15 +85,17 @@ const filterOptions = computed(() => [
       <div class="grid gap-3 md:grid-cols-2">
         <label class="text-sm text-slate-300">
           {{ t('teForm.teFormLabel') }}
-          <input
-            v-model="teFormInput"
-            type="text"
-            lang="ja"
+          <KanaInput
+            :model-value="teFormInput"
             :disabled="!teFormEnabled"
-            :placeholder="t('teForm.teFormPlaceholder')"
-            class="mt-1 w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            @keyup.enter="submitAnswer"
-          >
+            :placeholder="teFormInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : t('teForm.teFormPlaceholder')"
+            :show-script-toggle="true"
+            :switch-title="teFormInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
+            class="mt-1"
+            @update:model-value="setTeFormInput"
+            @toggle-script="toggleTeFormInputScript"
+            @enter="submitAnswer"
+          />
         </label>
 
         <label class="text-sm text-slate-300">
@@ -105,7 +112,7 @@ const filterOptions = computed(() => [
       </div>
 
       <div class="mt-3 grid gap-2 md:grid-cols-[1fr_220px]">
-        <button type="button" class="action-main" @click="submitAnswer">{{ t('teForm.check') }}</button>
+        <CheckAnswerButton :label="t('teForm.check')" @click="submitAnswer" />
         <button type="button" class="action-ghost" @click="nextVerb">{{ t('teForm.next') }}</button>
       </div>
 

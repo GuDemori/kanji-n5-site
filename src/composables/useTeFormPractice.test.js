@@ -38,6 +38,10 @@ describe('useTeFormPractice', () => {
     expect(isTeFormAnswerCorrect('食べて', 'たべて')).toBe(false);
   });
 
+  it('aceita forma て em katakana ao normalizar para hiragana', () => {
+    expect(isTeFormAnswerCorrect('タベテ', 'たべて')).toBe(true);
+  });
+
   it('não registra tentativa quando os dois campos estão desabilitados', () => {
     const practice = useTeFormPractice(singleVerb);
 
@@ -54,12 +58,28 @@ describe('useTeFormPractice', () => {
     const practice = useTeFormPractice(singleVerb);
 
     practice.setTranslationEnabled(false);
-    practice.teFormInput.value = ' たべて ';
+    practice.setTeFormInput(' たべて ');
     practice.translationInput.value = 'errado';
     practice.submitAnswer();
 
     expect(practice.stats.value.correct).toBe(1);
-    expect(practice.feedbackState.value).toBe('correct');
+    expect(practice.feedbackState.value).toBe('idle');
+    expect(practice.teFormInput.value).toBe('');
+  });
+
+  it('converte o input da forma て entre hiragana e katakana', () => {
+    const practice = useTeFormPractice(singleVerb);
+
+    practice.setTeFormInput('tabete');
+    expect(practice.teFormInput.value).toBe('たべて');
+
+    practice.toggleTeFormInputScript();
+    expect(practice.teFormInputScript.value).toBe('katakana');
+    expect(practice.teFormInput.value).toBe('タベテ');
+
+    practice.submitAnswer();
+    expect(practice.feedbackState.value).toBe('idle');
+    expect(practice.teFormInput.value).toBe('');
   });
 
   it('valida somente a tradução quando apenas esse campo está ativo', () => {
@@ -72,14 +92,15 @@ describe('useTeFormPractice', () => {
     practice.submitAnswer();
 
     expect(practice.stats.value.correct).toBe(1);
-    expect(practice.feedbackState.value).toBe('correct');
+    expect(practice.feedbackState.value).toBe('idle');
+    expect(practice.translationInput.value).toBe('');
   });
 
   it('valida forma て e tradução quando os dois campos estão ativos', () => {
     const practice = useTeFormPractice(singleVerb);
 
     practice.setTranslationEnabled(true);
-    practice.teFormInput.value = 'たべて';
+    practice.setTeFormInput('たべて');
     practice.translationInput.value = 'comer errado';
     practice.submitAnswer();
 
@@ -91,7 +112,8 @@ describe('useTeFormPractice', () => {
     practice.submitAnswer();
 
     expect(practice.stats.value.correct).toBe(1);
-    expect(practice.feedbackState.value).toBe('correct');
+    expect(practice.feedbackState.value).toBe('idle');
+    expect(practice.translationInput.value).toBe('');
   });
 
   it('filtra a lista completa por verbo base', () => {
