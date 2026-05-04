@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import BaseSelect from './BaseSelect.vue';
 import { useI18n } from '../i18n';
 
 const emit = defineEmits(['update:grid-search', 'update:grid-status']);
@@ -30,6 +31,13 @@ const resultsLabel = computed(() => {
   }
   return t('grid.resultMany', { count: props.gridFilteredData.length });
 });
+
+const statusOptions = computed(() => [
+  { value: 'all', label: t('grid.statusAll') },
+  { value: 'known', label: t('grid.statusKnown') },
+  { value: 'unknown', label: t('grid.statusUnknown') },
+  { value: 'unmarked', label: t('grid.statusUnmarked') },
+]);
 </script>
 
 <template>
@@ -48,19 +56,12 @@ const resultsLabel = computed(() => {
         >
       </label>
 
-      <label class="text-sm text-slate-300">
-        {{ t('grid.status') }}
-        <select
-          :value="gridStatusFilter"
-          class="mt-1 w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
-          @change="emit('update:grid-status', $event.target.value)"
-        >
-          <option value="all">{{ t('grid.statusAll') }}</option>
-          <option value="known">{{ t('grid.statusKnown') }}</option>
-          <option value="unknown">{{ t('grid.statusUnknown') }}</option>
-          <option value="unmarked">{{ t('grid.statusUnmarked') }}</option>
-        </select>
-      </label>
+      <BaseSelect
+        :model-value="gridStatusFilter"
+        :label="t('grid.status')"
+        :options="statusOptions"
+        @update:model-value="emit('update:grid-status', $event)"
+      />
     </div>
 
     <p class="mb-3 text-sm text-slate-400">{{ resultsLabel }}</p>

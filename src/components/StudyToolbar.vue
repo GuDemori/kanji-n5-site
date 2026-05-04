@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import BaseSelect from './BaseSelect.vue';
 import { useI18n } from '../i18n';
 
 defineProps({
@@ -10,6 +12,11 @@ defineProps({
 
 const emit = defineEmits(['set-mode', 'reset-progress']);
 const { locale, setLocale, supportedLocales, t } = useI18n();
+
+const localeOptions = computed(() => supportedLocales.map(item => ({
+  value: item.code,
+  label: item.label,
+})));
 </script>
 
 <template>
@@ -33,16 +40,14 @@ const { locale, setLocale, supportedLocales, t } = useI18n();
       </button>
     </div>
 
-    <label class="text-sm text-slate-300">
-      {{ t('app.language') }}
-      <select
-        :value="locale"
-        class="ml-2 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100"
-        @change="setLocale($event.target.value)"
-      >
-        <option v-for="item in supportedLocales" :key="item.code" :value="item.code">{{ item.label }}</option>
-      </select>
-    </label>
+    <BaseSelect
+      :model-value="locale"
+      :label="t('app.language')"
+      :options="localeOptions"
+      wrapper-class="flex items-center gap-2 text-sm text-slate-300"
+      button-class="w-36 text-sm"
+      @update:model-value="setLocale"
+    />
 
     <button
       type="button"

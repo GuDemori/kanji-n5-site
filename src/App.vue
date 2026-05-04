@@ -9,6 +9,7 @@ import FlashcardPanel from './components/FlashcardPanel.vue';
 import QuizPanel from './components/QuizPanel.vue';
 import KanjiGridPanel from './components/KanjiGridPanel.vue';
 import CountingPracticeView from './components/CountingPracticeView.vue';
+import TeFormPracticeView from './components/TeFormPracticeView.vue';
 import { useStudyStore } from './stores/useStudyStore';
 
 function getCurrentPath() {
@@ -16,8 +17,11 @@ function getCurrentPath() {
 
   const redirectedPath = new URLSearchParams(window.location.search).get('p');
   if (redirectedPath === '/counting') return '/counting';
+  if (redirectedPath === '/te-form') return '/te-form';
 
-  return window.location.pathname === '/counting' ? '/counting' : '/';
+  if (window.location.pathname === '/counting') return '/counting';
+  if (window.location.pathname === '/te-form') return '/te-form';
+  return '/';
 }
 
 const store = useStudyStore();
@@ -59,6 +63,8 @@ const currentMeaning = computed(() => (current.value ? current.value.meaning : '
 const transitionDirection = ref(1);
 const currentPath = ref(getCurrentPath());
 const isCountingRoute = computed(() => currentPath.value === '/counting');
+const isTeFormRoute = computed(() => currentPath.value === '/te-form');
+const isKanjiRoute = computed(() => !isCountingRoute.value && !isTeFormRoute.value);
 
 function moveCardWithDirection(delta) {
   transitionDirection.value = delta < 0 ? -1 : 1;
@@ -66,7 +72,7 @@ function moveCardWithDirection(delta) {
 }
 
 function handleKeydown(event) {
-  if (isCountingRoute.value) return;
+  if (!isKanjiRoute.value) return;
 
   if (event.altKey || event.ctrlKey || event.metaKey) return;
 
@@ -103,7 +109,7 @@ function handleKeydown(event) {
 }
 
 function handleOutsideClick(event) {
-  if (isCountingRoute.value) return;
+  if (!isKanjiRoute.value) return;
   if (!helpOpen.value) return;
 
   const helpWrap = event.target.closest('[data-help-wrap]');
@@ -113,7 +119,7 @@ function handleOutsideClick(event) {
 }
 
 function navigate(path) {
-  const target = path === '/counting' ? '/counting' : '/';
+  const target = ['/counting', '/te-form'].includes(path) ? path : '/';
   if (target === currentPath.value) return;
 
   window.history.pushState({}, '', target);
@@ -126,9 +132,9 @@ function handlePopState() {
 
 onMounted(() => {
   const redirectedPath = new URLSearchParams(window.location.search).get('p');
-  if (redirectedPath === '/counting' && window.location.pathname !== '/counting') {
-    window.history.replaceState({}, '', '/counting');
-    currentPath.value = '/counting';
+  if (['/counting', '/te-form'].includes(redirectedPath) && window.location.pathname !== redirectedPath) {
+    window.history.replaceState({}, '', redirectedPath);
+    currentPath.value = redirectedPath;
   }
 
   store.init();
@@ -149,6 +155,7 @@ onUnmounted(() => {
     <PracticeRouteTabs :current-path="currentPath" @navigate="navigate" />
 
     <CountingPracticeView v-if="isCountingRoute" />
+    <TeFormPracticeView v-else-if="isTeFormRoute" />
 
     <template v-else>
       <HeroHeader

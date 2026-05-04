@@ -1,4 +1,6 @@
 <script setup>
+import { computed } from 'vue';
+import BaseSelect from './BaseSelect.vue';
 import SessionMetrics from './SessionMetrics.vue';
 import { useI18n } from '../i18n';
 import { useCountingPractice } from '../composables/useCountingPractice';
@@ -24,6 +26,11 @@ const {
   onShuffleChange,
   onSequentialChange,
 } = useCountingPractice();
+
+const glossaryOptions = computed(() => [
+  { value: 'all', label: t('counting.glossaryAllTypes') },
+  ...typeOptions.value,
+]);
 </script>
 
 <template>
@@ -74,16 +81,12 @@ const {
         </div>
 
         <div class="rounded-xl border border-white/10 bg-slate-900/70 p-4">
-          <label class="text-sm text-slate-300">
-            {{ t('counting.selectType') }}
-            <select
-              :value="selectedType"
-              class="mt-1 w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
-              @change="onTypeChange($event.target.value)"
-            >
-              <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-            </select>
-          </label>
+          <BaseSelect
+            :model-value="selectedType"
+            :label="t('counting.selectType')"
+            :options="typeOptions"
+            @update:model-value="onTypeChange"
+          />
         </div>
       </div>
 
@@ -118,17 +121,11 @@ const {
           <p class="text-sm text-slate-400">{{ t('counting.glossarySubtitle') }}</p>
         </div>
 
-        <label class="text-sm text-slate-300">
-          {{ t('counting.glossaryFilterLabel') }}
-          <select
-            :value="glossaryType"
-            class="mt-1 w-full rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100"
-            @change="glossaryType = $event.target.value"
-          >
-            <option value="all">{{ t('counting.glossaryAllTypes') }}</option>
-            <option v-for="option in typeOptions" :key="`glossary-${option.value}`" :value="option.value">{{ option.label }}</option>
-          </select>
-        </label>
+        <BaseSelect
+          v-model="glossaryType"
+          :label="t('counting.glossaryFilterLabel')"
+          :options="glossaryOptions"
+        />
       </div>
 
       <p class="mb-3 text-sm text-slate-400">{{ t('counting.glossaryCount', { count: glossaryRows.length }) }}</p>

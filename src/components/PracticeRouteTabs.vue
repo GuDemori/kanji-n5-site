@@ -18,7 +18,7 @@ const { t } = useI18n();
       <button
         type="button"
         class="rounded-lg px-4 py-2 text-sm font-semibold"
-        :class="currentPath !== '/counting' ? 'bg-slate-100 text-slate-900' : 'text-slate-300'"
+        :class="currentPath === '/' ? 'bg-slate-100 text-slate-900' : 'text-slate-300'"
         @click="emit('navigate', '/')"
       >
         {{ t('app.kanjiPractice') }}
@@ -30,6 +30,14 @@ const { t } = useI18n();
         @click="emit('navigate', '/counting')"
       >
         {{ t('app.countingPractice') }}
+      </button>
+      <button
+        type="button"
+        class="rounded-lg px-4 py-2 text-sm font-semibold"
+        :class="currentPath === '/te-form' ? 'bg-slate-100 text-slate-900' : 'text-slate-300'"
+        @click="emit('navigate', '/te-form')"
+      >
+        {{ t('app.teFormPractice') }}
       </button>
     </div>
   </section>

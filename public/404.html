@@ -9,11 +9,13 @@
     <script>
       (function () {
         var path = window.location.pathname;
-        var knownRoute = '/counting';
+        var knownRoutes = ['/counting', '/te-form'];
         var normalized = path.endsWith('/') ? path.slice(0, -1) : path;
-        var matchesCounting = normalized === knownRoute || normalized.endsWith(knownRoute);
+        var knownRoute = knownRoutes.find(function (route) {
+          return normalized === route || normalized.endsWith(route);
+        });
 
-        if (!matchesCounting) {
+        if (!knownRoute) {
           window.location.replace('/');
           return;
         }
