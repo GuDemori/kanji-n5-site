@@ -11,14 +11,18 @@ const { t } = useI18n();
 const {
   verbList,
   currentVerb,
+  lessonOptions,
   teFormEnabled,
   translationEnabled,
   teFormInput,
   translationInput,
   teFormInputScript,
+  practiceLessonFilter,
   verbListSearch,
   verbListFilter,
+  verbListLessonFilter,
   filteredVerbList,
+  groupedFilteredVerbList,
   feedback,
   feedbackState,
   stats,
@@ -29,6 +33,7 @@ const {
   toggleTeFormInputScript,
   setTeFormEnabled,
   setTranslationEnabled,
+  setPracticeLessonFilter,
 } = useTeFormPractice();
 
 const filterOptions = computed(() => [
@@ -47,7 +52,17 @@ const filterOptions = computed(() => [
     <SessionMetrics :session-stats="stats" :session-rate="sessionRate" />
 
     <section class="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div class="mb-4 flex flex-wrap items-center gap-4">
+      <div class="mb-4 grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
+        <BaseSelect
+          :model-value="practiceLessonFilter"
+          :label="t('teForm.practiceLessonFilterLabel')"
+          :options="lessonOptions"
+          @update:model-value="setPracticeLessonFilter"
+        />
+
+        <div />
+
+        <div class="flex flex-wrap items-center gap-4 lg:justify-end">
         <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
           <span class="font-semibold">{{ t('teForm.answerTeForm') }}</span>
           <input
@@ -75,11 +90,13 @@ const filterOptions = computed(() => [
             aria-hidden="true"
           />
         </label>
+        </div>
       </div>
 
       <div v-if="currentVerb" class="mb-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8 text-center">
         <p class="text-xs uppercase tracking-wide text-slate-400">{{ t('teForm.promptLabel') }}</p>
         <p class="mt-2 text-5xl font-bold text-slate-50">{{ currentVerb.verb }}</p>
+        <p class="mt-3 text-sm text-sky-200">{{ currentVerb.lesson }}</p>
       </div>
 
       <div class="grid gap-3 md:grid-cols-2">
@@ -126,6 +143,13 @@ const filterOptions = computed(() => [
         }"
       >
         {{ feedback }}
+      </div>
+
+      <div
+        v-if="!currentVerb"
+        class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4 text-center text-slate-400"
+      >
+        {{ t('teForm.noPracticeResults') }}
       </div>
     </section>
 
@@ -206,7 +230,7 @@ const filterOptions = computed(() => [
       <h3 class="text-xl font-bold text-slate-100">{{ t('teForm.fullListTitle') }}</h3>
       <p class="mt-1 text-sm text-slate-400">{{ t('teForm.fullListCount', { count: filteredVerbList.length }) }}</p>
 
-      <div class="mt-4 grid gap-3 sm:grid-cols-[1fr_220px]">
+      <div class="mt-4 grid gap-3 lg:grid-cols-[1fr_220px_220px]">
         <label class="text-sm text-slate-300">
           {{ t('teForm.searchLabel') }}
           <input
@@ -222,24 +246,39 @@ const filterOptions = computed(() => [
           :label="t('teForm.searchFilterLabel')"
           :options="filterOptions"
         />
+
+        <BaseSelect
+          v-model="verbListLessonFilter"
+          :label="t('teForm.listLessonFilterLabel')"
+          :options="lessonOptions"
+        />
       </div>
 
-      <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <article
-          v-for="verb in filteredVerbList"
-          :key="verb.id"
-          class="rounded-xl border border-white/10 bg-white/5 p-4 text-base text-slate-300"
+      <div class="mt-4 space-y-4" v-if="filteredVerbList.length">
+        <section
+          v-for="group in groupedFilteredVerbList"
+          :key="group.lesson"
+          class="rounded-2xl border border-white/10 bg-white/5 p-4"
         >
-          <p class="font-semibold leading-relaxed text-slate-100">{{ verb.verb }} -> {{ verb.teForm }} -> {{ verb.translation }}</p>
-        </article>
-
-        <article
-          v-if="!filteredVerbList.length"
-          class="col-span-full rounded-xl border border-white/10 bg-white/5 p-4 text-center text-slate-400"
-        >
-          {{ t('teForm.noResults') }}
-        </article>
+          <h4 class="text-lg font-bold text-slate-100">{{ group.lesson }}</h4>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <article
+              v-for="verb in group.items"
+              :key="verb.id"
+              class="rounded-xl border border-white/10 bg-slate-950/50 p-4 text-base text-slate-300"
+            >
+              <p class="font-semibold leading-relaxed text-slate-100">{{ verb.verb }} -> {{ verb.teForm }} -> {{ verb.translation }}</p>
+            </article>
+          </div>
+        </section>
       </div>
+
+      <article
+        v-else
+        class="mt-3 rounded-xl border border-white/10 bg-white/5 p-4 text-center text-slate-400"
+      >
+        {{ t('teForm.noResults') }}
+      </article>
     </section>
   </section>
 </template>

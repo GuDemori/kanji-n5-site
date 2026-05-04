@@ -1,5 +1,7 @@
 # Lista de verbos — Forma て
 
+## Lição 14
+
 つけます -> つけて -> acender, ligar  
 けします -> けして -> apagar, desligar  
 あけます -> あけて -> abrir  
@@ -20,13 +22,21 @@
 はいります -> はいって -> entrar  
 でます -> でて -> sair  
 ふります -> ふって -> chover  
-コピーします -> コピーして -> copiar, tirar cópias
+コピーします -> コピーして -> copiar, tirar cópias  
+
+## Lição 15
+
 おきます -> おいて -> colocar, pôr  
 つくります -> つくって -> fazer, produzir  
 うります -> うって -> vender  
 しります -> しって -> saber, conhecer  
 すみます -> すんで -> viver, morar  
-けんきゅうします -> けんきゅうして -> pesquisar
+けんきゅうします -> けんきゅうして -> pesquisar  
+します -> して -> fazer  
+きます -> きて -> vir  
+
+## Lição 16
+
 のります -> のって -> subir, embarcar  
 おります -> おりて -> descer  
 のりかえます -> のりかえて -> baldear, trocar de transporte  
@@ -41,5 +51,3 @@
 はじめます -> はじめて -> começar, iniciar  
 けんがくします -> けんきゅうして -> visitar algum lugar a estudo  
 でんわします -> でんわして -> telefonar  
-します -> して -> fazer  
-きます -> きて -> vir  

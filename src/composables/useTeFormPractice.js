@@ -35,38 +35,62 @@ export function isTeFormAnswerCorrect(candidate, expected) {
 }
 
 export function isTranslationAnswerCorrect(candidate, expected) {
-  return normalizeTranslation(candidate) === normalizeTranslation(expected);
+  const normalizedCandidate = normalizeTranslation(candidate);
+  return splitTranslationVariants(expected).some(variant => normalizeTranslation(variant) === normalizedCandidate);
 }
 
 export function useTeFormPractice(verbs = teFormVerbData) {
   const { t } = useI18n();
   const verbList = ref(verbs);
-  const currentIndex = ref(verbList.value.length ? randomIndex(verbList.value.length) : 0);
+  const currentIndex = ref(0);
   const teFormEnabled = ref(true);
   const translationEnabled = ref(false);
   const teFormInput = ref('');
   const teFormInputScript = ref('hiragana');
   const translationInput = ref('');
+  const practiceLessonFilter = ref('all');
   const verbListSearch = ref('');
   const verbListFilter = ref('verb');
+  const verbListLessonFilter = ref('all');
   const feedback = ref('');
   const feedbackState = ref('idle');
   const stats = ref(createStats());
 
-  const currentVerb = computed(() => verbList.value[currentIndex.value] || null);
+  const lessonOptions = computed(() => [
+    { value: 'all', label: t('teForm.lessonAll') },
+    ...getUniqueLessons(verbList.value).map(lesson => ({ value: lesson, label: lesson })),
+  ]);
+  const practiceVerbPool = computed(() => filterByLesson(verbList.value, practiceLessonFilter.value));
+  const currentVerb = computed(() => practiceVerbPool.value[currentIndex.value] || null);
   const filteredVerbList = computed(() => {
+    const lessonFiltered = filterByLesson(verbList.value, verbListLessonFilter.value);
     const query = normalizeSearchTerm(verbListSearch.value);
-    if (!query) return verbList.value;
+    if (!query) return lessonFiltered;
 
-    return verbList.value.filter(item => {
+    return lessonFiltered.filter(item => {
       const target = verbListFilter.value === 'translation' ? item.translation : item.verb;
       return normalizeSearchTerm(target).includes(query);
     });
+  });
+  const groupedFilteredVerbList = computed(() => {
+    const groups = new Map();
+
+    filteredVerbList.value.forEach(item => {
+      if (!groups.has(item.lesson)) {
+        groups.set(item.lesson, []);
+      }
+
+      groups.get(item.lesson).push(item);
+    });
+
+    return Array.from(groups, ([lesson, items]) => ({ lesson, items }));
   });
   const sessionRate = computed(() => {
     const { attempts, correct } = stats.value;
     return attempts ? Math.round((correct / attempts) * 100) : 0;
   });
+
+  resetCurrentIndex();
 
   function registerAttempt(correct) {
     stats.value.attempts += 1;
@@ -91,17 +115,17 @@ export function useTeFormPractice(verbs = teFormVerbData) {
   }
 
   function nextVerb() {
-    if (!verbList.value.length) return;
+    if (!practiceVerbPool.value.length) return;
 
-    if (verbList.value.length === 1) {
+    if (practiceVerbPool.value.length === 1) {
       currentIndex.value = 0;
       clearAnswer();
       return;
     }
 
-    let nextIndex = randomIndex(verbList.value.length);
+    let nextIndex = randomIndex(practiceVerbPool.value.length);
     while (nextIndex === currentIndex.value) {
-      nextIndex = randomIndex(verbList.value.length);
+      nextIndex = randomIndex(practiceVerbPool.value.length);
     }
 
     currentIndex.value = nextIndex;
@@ -160,17 +184,31 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     feedbackState.value = 'idle';
   }
 
+  function setPracticeLessonFilter(value) {
+    practiceLessonFilter.value = value;
+    resetCurrentIndex();
+    clearAnswer();
+  }
+
+  function setVerbListLessonFilter(value) {
+    verbListLessonFilter.value = value;
+  }
+
   return {
     verbList,
     currentVerb,
+    lessonOptions,
     teFormEnabled,
     translationEnabled,
     teFormInput,
     teFormInputScript,
     translationInput,
+    practiceLessonFilter,
     verbListSearch,
     verbListFilter,
+    verbListLessonFilter,
     filteredVerbList,
+    groupedFilteredVerbList,
     feedback,
     feedbackState,
     stats,
@@ -181,10 +219,32 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     toggleTeFormInputScript,
     setTeFormEnabled,
     setTranslationEnabled,
+    setPracticeLessonFilter,
+    setVerbListLessonFilter,
   };
+
+  function resetCurrentIndex() {
+    currentIndex.value = practiceVerbPool.value.length ? randomIndex(practiceVerbPool.value.length) : 0;
+  }
 }
 
 function normalizeKana(value) {
   const converted = wanakanaToHiragana(String(value || '').trim());
   return converted.replace(/[^ぁ-んー]/g, '');
+}
+
+function filterByLesson(items, lesson) {
+  if (lesson === 'all') return items;
+  return items.filter(item => item.lesson === lesson);
+}
+
+function getUniqueLessons(items) {
+  return [...new Set(items.map(item => item.lesson).filter(Boolean))];
+}
+
+function splitTranslationVariants(value) {
+  return String(value || '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean);
 }

@@ -13,12 +13,14 @@ const verbs = [
     verb: 'たべます',
     teForm: 'たべて',
     translation: 'comer arroz',
+    lesson: 'Lição 14',
   },
   {
     id: 'test-2',
     verb: 'のみます',
     teForm: 'のんで',
     translation: 'beber água',
+    lesson: 'Lição 15',
   },
 ];
 const singleVerb = [verbs[0]];
@@ -27,6 +29,12 @@ describe('useTeFormPractice', () => {
   it('normaliza tradução com lowercase, trim e espaços duplicados', () => {
     expect(normalizeTranslation('  COMER   ARROZ  ')).toBe('comer arroz');
     expect(isTranslationAnswerCorrect(' COMER   ARROZ ', 'comer arroz')).toBe(true);
+  });
+
+  it('aceita qualquer variante de tradução separada por vírgula', () => {
+    expect(isTranslationAnswerCorrect('ligar', 'acender, ligar')).toBe(true);
+    expect(isTranslationAnswerCorrect('desligar', 'apagar, desligar')).toBe(true);
+    expect(isTranslationAnswerCorrect('acender luz', 'acender, ligar')).toBe(false);
   });
 
   it('normaliza busca ignorando maiúsculas, espaços duplicados e acentos', () => {
@@ -96,6 +104,24 @@ describe('useTeFormPractice', () => {
     expect(practice.translationInput.value).toBe('');
   });
 
+  it('aceita uma única tradução válida quando o verbo tem múltiplas opções', () => {
+    const practice = useTeFormPractice([{
+      id: 'test-3',
+      verb: 'つけます',
+      teForm: 'つけて',
+      translation: 'acender, ligar',
+      lesson: 'Lição 14',
+    }]);
+
+    practice.setTeFormEnabled(false);
+    practice.setTranslationEnabled(true);
+    practice.translationInput.value = 'ligar';
+    practice.submitAnswer();
+
+    expect(practice.stats.value.correct).toBe(1);
+    expect(practice.translationInput.value).toBe('');
+  });
+
   it('valida forma て e tradução quando os dois campos estão ativos', () => {
     const practice = useTeFormPractice(singleVerb);
 
@@ -132,5 +158,27 @@ describe('useTeFormPractice', () => {
     practice.verbListSearch.value = 'BEBER AGUA';
 
     expect(practice.filteredVerbList.value).toEqual([verbs[1]]);
+  });
+
+  it('filtra a prática por lição específica', () => {
+    const practice = useTeFormPractice(verbs);
+
+    practice.setPracticeLessonFilter('Lição 15');
+
+    expect(practice.currentVerb.value).toEqual(verbs[1]);
+  });
+
+  it('filtra a lista completa por lição e mantém agrupamento por lição', () => {
+    const practice = useTeFormPractice(verbs);
+
+    practice.setVerbListLessonFilter('Lição 14');
+
+    expect(practice.filteredVerbList.value).toEqual([verbs[0]]);
+    expect(practice.groupedFilteredVerbList.value).toEqual([
+      {
+        lesson: 'Lição 14',
+        items: [verbs[0]],
+      },
+    ]);
   });
 });
