@@ -3,6 +3,7 @@ import CheckAnswerButton from './CheckAnswerButton.vue';
 import { computed } from 'vue';
 import BaseSelect from './BaseSelect.vue';
 import KanaInput from './KanaInput.vue';
+import PracticePromptCard from './PracticePromptCard.vue';
 import SessionMetrics from './SessionMetrics.vue';
 import { useI18n } from '../i18n';
 import { useTeFormPractice } from '../composables/useTeFormPractice';
@@ -64,20 +65,6 @@ const filterOptions = computed(() => [
         />
 
         <div class="flex flex-wrap items-center gap-4 lg:justify-end">
-          <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-            <span class="font-semibold">{{ t('teForm.invertPractice') }}</span>
-            <input
-              type="checkbox"
-              class="peer sr-only"
-              :checked="invertedEnabled"
-              @change="setInvertedEnabled($event.target.checked)"
-            >
-            <span
-              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-              aria-hidden="true"
-            />
-          </label>
-
           <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
             <span class="font-semibold">{{ t('teForm.answerTeForm') }}</span>
             <input
@@ -105,19 +92,30 @@ const filterOptions = computed(() => [
               aria-hidden="true"
             />
           </label>
+
+          <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+            <span class="font-semibold">{{ t('teForm.invertPractice') }}</span>
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              :checked="invertedEnabled"
+              @change="setInvertedEnabled($event.target.checked)"
+            >
+            <span
+              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+              aria-hidden="true"
+            />
+          </label>
         </div>
       </div>
 
-      <div v-if="currentVerb" class="mb-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8 text-center">
-        <p class="text-xs uppercase tracking-wide text-slate-400">{{ t(invertedEnabled ? 'teForm.translationPromptLabel' : 'teForm.promptLabel') }}</p>
-        <p
-          class="mt-2 break-words font-bold text-slate-50"
-          :class="invertedEnabled ? 'text-3xl md:text-4xl' : 'text-5xl'"
-        >
-          {{ invertedEnabled ? currentVerb.translation : currentVerb.verb }}
-        </p>
-        <p class="mt-3 text-sm text-sky-200">{{ currentVerb.lesson }}</p>
-      </div>
+      <PracticePromptCard
+        v-if="currentVerb"
+        :label="t(invertedEnabled ? 'teForm.translationPromptLabel' : 'teForm.promptLabel')"
+        :value="invertedEnabled ? currentVerb.translation : currentVerb.verb"
+        :meta="currentVerb.lesson"
+        :variant="invertedEnabled ? 'compact' : 'default'"
+      />
 
       <div class="grid gap-3" :class="invertedEnabled ? '' : 'md:grid-cols-2'">
         <label v-if="!invertedEnabled" class="text-sm text-slate-300">

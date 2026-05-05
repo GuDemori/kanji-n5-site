@@ -1,4 +1,5 @@
 <script setup>
+import PracticePromptCard from './PracticePromptCard.vue';
 import { useI18n } from '../i18n';
 
 const props = defineProps({
@@ -94,9 +95,12 @@ function optionClasses(option) {
     <p class="mt-1 text-xs text-sky-200">{{ t('quiz.shortcuts') }}</p>
 
     <Transition :name="transitionDirection < 0 ? 'card-roulette-up' : 'card-roulette-down'" mode="out-in">
-      <div :key="currentKanji" class="kanji-panel mb-4 mt-3 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
-        <span class="kanji-face">{{ currentKanji }}</span>
-      </div>
+      <PracticePromptCard
+        :key="currentKanji"
+        :value="currentKanji"
+        variant="kanji"
+        class="mb-4 mt-3"
+      />
     </Transition>
 
     <div class="grid gap-2 sm:grid-cols-2">

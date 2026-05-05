@@ -3,6 +3,7 @@ import CheckAnswerButton from './CheckAnswerButton.vue';
 import { computed } from 'vue';
 import BaseSelect from './BaseSelect.vue';
 import KanaInput from './KanaInput.vue';
+import PracticePromptCard from './PracticePromptCard.vue';
 import SessionMetrics from './SessionMetrics.vue';
 import { useI18n } from '../i18n';
 import { useCountingPractice } from '../composables/useCountingPractice';
@@ -92,10 +93,10 @@ const glossaryOptions = computed(() => [
         </div>
       </div>
 
-      <div class="mb-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8 text-center">
-        <p class="text-xs uppercase tracking-wide text-slate-400">{{ t('counting.numberPrompt') }}</p>
-        <p class="mt-2 text-5xl font-bold text-slate-50">{{ currentPrompt.counterLabel }}</p>
-      </div>
+      <PracticePromptCard
+        :label="t('counting.numberPrompt')"
+        :value="currentPrompt.counterLabel"
+      />
 
       <div class="grid gap-2 md:grid-cols-[1fr_220px_220px]">
         <KanaInput

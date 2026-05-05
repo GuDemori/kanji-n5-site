@@ -1,6 +1,7 @@
 <script setup>
 import CheckAnswerButton from './CheckAnswerButton.vue';
 import KanaInput from './KanaInput.vue';
+import PracticePromptCard from './PracticePromptCard.vue';
 import { useI18n } from '../i18n';
 
 defineProps({
@@ -121,9 +122,12 @@ const { t } = useI18n();
     </div>
 
     <Transition :name="transitionDirection < 0 ? 'card-roulette-up' : 'card-roulette-down'" mode="out-in">
-      <div :key="currentKanji" class="kanji-panel mb-4 rounded-3xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5">
-        <span class="kanji-face">{{ currentKanji }}</span>
-      </div>
+      <PracticePromptCard
+        :key="currentKanji"
+        :value="currentKanji"
+        variant="kanji"
+        class="mb-4"
+      />
     </Transition>
 
     <div class="grid gap-3 lg:grid-cols-3">
