@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isBaseVerbAnswerCorrect,
   isTeFormAnswerCorrect,
   isTranslationAnswerCorrect,
   normalizeSearchTerm,
@@ -48,6 +49,11 @@ describe('useTeFormPractice', () => {
 
   it('aceita forma て em katakana ao normalizar para hiragana', () => {
     expect(isTeFormAnswerCorrect('タベテ', 'たべて')).toBe(true);
+  });
+
+  it('valida verbo base com comparação exata após trim', () => {
+    expect(isBaseVerbAnswerCorrect(' たべます ', 'たべます')).toBe(true);
+    expect(isBaseVerbAnswerCorrect('食べます', 'たべます')).toBe(false);
   });
 
   it('não registra tentativa quando os dois campos estão desabilitados', () => {
@@ -135,6 +141,30 @@ describe('useTeFormPractice', () => {
     expect(practice.feedback.value).toContain('Tradução correta: comer arroz');
 
     practice.translationInput.value = 'comer arroz';
+    practice.submitAnswer();
+
+    expect(practice.stats.value.correct).toBe(1);
+    expect(practice.feedbackState.value).toBe('idle');
+    expect(practice.translationInput.value).toBe('');
+  });
+
+  it('ao inverter, valida a tradução como prompt e a resposta como verbo base', () => {
+    const practice = useTeFormPractice(singleVerb);
+
+    practice.setInvertedEnabled(true);
+
+    expect(practice.invertedEnabled.value).toBe(true);
+    expect(practice.teFormEnabled.value).toBe(false);
+    expect(practice.translationEnabled.value).toBe(true);
+
+    practice.setBaseVerbInput('tabete');
+    practice.submitAnswer();
+
+    expect(practice.stats.value.wrong).toBe(1);
+    expect(practice.feedback.value).toContain('Verbo correto: たべます');
+
+    practice.setBaseVerbInput('tabemasu');
+    expect(practice.translationInput.value).toBe('たべます');
     practice.submitAnswer();
 
     expect(practice.stats.value.correct).toBe(1);

@@ -39,10 +39,15 @@ export function isTranslationAnswerCorrect(candidate, expected) {
   return splitTranslationVariants(expected).some(variant => normalizeTranslation(variant) === normalizedCandidate);
 }
 
+export function isBaseVerbAnswerCorrect(candidate, expected) {
+  return String(candidate || '').trim() === expected;
+}
+
 export function useTeFormPractice(verbs = teFormVerbData) {
   const { t } = useI18n();
   const verbList = ref(verbs);
   const currentIndex = ref(0);
+  const invertedEnabled = ref(false);
   const teFormEnabled = ref(true);
   const translationEnabled = ref(false);
   const teFormInput = ref('');
@@ -135,6 +140,20 @@ export function useTeFormPractice(verbs = teFormVerbData) {
   function submitAnswer() {
     if (!currentVerb.value) return;
 
+    if (invertedEnabled.value) {
+      const correct = isBaseVerbAnswerCorrect(translationInput.value, currentVerb.value.verb);
+      registerAttempt(correct);
+      feedbackState.value = correct ? 'correct' : 'wrong';
+      feedback.value = correct
+        ? t('teForm.feedback.correct')
+        : t('teForm.feedback.invertedWrong', { verb: currentVerb.value.verb });
+
+      if (correct) {
+        nextVerb();
+      }
+      return;
+    }
+
     if (!teFormEnabled.value && !translationEnabled.value) {
       feedback.value = t('teForm.feedback.enableField');
       feedbackState.value = 'warning';
@@ -184,6 +203,12 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     feedbackState.value = 'idle';
   }
 
+  function setBaseVerbInput(value) {
+    translationInput.value = wanakanaToHiragana(String(value || ''), { IMEMode: true });
+    feedback.value = '';
+    feedbackState.value = 'idle';
+  }
+
   function setPracticeLessonFilter(value) {
     practiceLessonFilter.value = value;
     resetCurrentIndex();
@@ -194,10 +219,23 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     verbListLessonFilter.value = value;
   }
 
+  function setInvertedEnabled(value) {
+    invertedEnabled.value = Boolean(value);
+    if (invertedEnabled.value) {
+      teFormEnabled.value = false;
+      translationEnabled.value = true;
+    } else {
+      teFormEnabled.value = true;
+      translationEnabled.value = false;
+    }
+    clearAnswer();
+  }
+
   return {
     verbList,
     currentVerb,
     lessonOptions,
+    invertedEnabled,
     teFormEnabled,
     translationEnabled,
     teFormInput,
@@ -217,6 +255,8 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     submitAnswer,
     setTeFormInput,
     toggleTeFormInputScript,
+    setBaseVerbInput,
+    setInvertedEnabled,
     setTeFormEnabled,
     setTranslationEnabled,
     setPracticeLessonFilter,

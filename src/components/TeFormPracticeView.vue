@@ -12,6 +12,7 @@ const {
   verbList,
   currentVerb,
   lessonOptions,
+  invertedEnabled,
   teFormEnabled,
   translationEnabled,
   teFormInput,
@@ -31,6 +32,8 @@ const {
   submitAnswer,
   setTeFormInput,
   toggleTeFormInputScript,
+  setBaseVerbInput,
+  setInvertedEnabled,
   setTeFormEnabled,
   setTranslationEnabled,
   setPracticeLessonFilter,
@@ -52,7 +55,7 @@ const filterOptions = computed(() => [
     <SessionMetrics :session-stats="stats" :session-rate="sessionRate" />
 
     <section class="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div class="mb-4 grid gap-3 lg:grid-cols-[1fr_1fr_auto]">
+      <div class="mb-4 grid gap-3 lg:grid-cols-[minmax(0,416px)_1fr]">
         <BaseSelect
           :model-value="practiceLessonFilter"
           :label="t('teForm.practiceLessonFilterLabel')"
@@ -60,47 +63,64 @@ const filterOptions = computed(() => [
           @update:model-value="setPracticeLessonFilter"
         />
 
-        <div />
-
         <div class="flex flex-wrap items-center gap-4 lg:justify-end">
-        <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-          <span class="font-semibold">{{ t('teForm.answerTeForm') }}</span>
-          <input
-            type="checkbox"
-            class="peer sr-only"
-            :checked="teFormEnabled"
-            @change="setTeFormEnabled($event.target.checked)"
-          >
-          <span
-            class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-            aria-hidden="true"
-          />
-        </label>
+          <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+            <span class="font-semibold">{{ t('teForm.invertPractice') }}</span>
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              :checked="invertedEnabled"
+              @change="setInvertedEnabled($event.target.checked)"
+            >
+            <span
+              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+              aria-hidden="true"
+            />
+          </label>
 
-        <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-          <span class="font-semibold">{{ t('teForm.answerTranslation') }}</span>
-          <input
-            type="checkbox"
-            class="peer sr-only"
-            :checked="translationEnabled"
-            @change="setTranslationEnabled($event.target.checked)"
-          >
-          <span
-            class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-            aria-hidden="true"
-          />
-        </label>
+          <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+            <span class="font-semibold">{{ t('teForm.answerTeForm') }}</span>
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              :checked="teFormEnabled"
+              @change="setTeFormEnabled($event.target.checked)"
+            >
+            <span
+              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+              aria-hidden="true"
+            />
+          </label>
+
+          <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+            <span class="font-semibold">{{ t('teForm.answerTranslation') }}</span>
+            <input
+              type="checkbox"
+              class="peer sr-only"
+              :checked="translationEnabled"
+              @change="setTranslationEnabled($event.target.checked)"
+            >
+            <span
+              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+              aria-hidden="true"
+            />
+          </label>
         </div>
       </div>
 
       <div v-if="currentVerb" class="mb-3 rounded-2xl border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-8 text-center">
-        <p class="text-xs uppercase tracking-wide text-slate-400">{{ t('teForm.promptLabel') }}</p>
-        <p class="mt-2 text-5xl font-bold text-slate-50">{{ currentVerb.verb }}</p>
+        <p class="text-xs uppercase tracking-wide text-slate-400">{{ t(invertedEnabled ? 'teForm.translationPromptLabel' : 'teForm.promptLabel') }}</p>
+        <p
+          class="mt-2 break-words font-bold text-slate-50"
+          :class="invertedEnabled ? 'text-3xl md:text-4xl' : 'text-5xl'"
+        >
+          {{ invertedEnabled ? currentVerb.translation : currentVerb.verb }}
+        </p>
         <p class="mt-3 text-sm text-sky-200">{{ currentVerb.lesson }}</p>
       </div>
 
-      <div class="grid gap-3 md:grid-cols-2">
-        <label class="text-sm text-slate-300">
+      <div class="grid gap-3" :class="invertedEnabled ? '' : 'md:grid-cols-2'">
+        <label v-if="!invertedEnabled" class="text-sm text-slate-300">
           {{ t('teForm.teFormLabel') }}
           <KanaInput
             :model-value="teFormInput"
@@ -116,8 +136,17 @@ const filterOptions = computed(() => [
         </label>
 
         <label class="text-sm text-slate-300">
-          {{ t('teForm.translationLabel') }}
+          {{ t(invertedEnabled ? 'teForm.baseVerbLabel' : 'teForm.translationLabel') }}
+          <KanaInput
+            v-if="invertedEnabled"
+            :model-value="translationInput"
+            :placeholder="t('teForm.baseVerbPlaceholder')"
+            class="mt-1"
+            @update:model-value="setBaseVerbInput"
+            @enter="submitAnswer"
+          />
           <input
+            v-else
             v-model="translationInput"
             type="text"
             :disabled="!translationEnabled"
