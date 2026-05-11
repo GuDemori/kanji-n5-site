@@ -48,6 +48,7 @@ export function useTeFormPractice(verbs = teFormVerbData) {
   const verbList = ref(verbs);
   const currentIndex = ref(0);
   const invertedEnabled = ref(false);
+  const conjugationType = ref('te');
   const teFormEnabled = ref(true);
   const translationEnabled = ref(false);
   const teFormInput = ref('');
@@ -65,6 +66,13 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     { value: 'all', label: t('teForm.lessonAll') },
     ...getUniqueLessons(verbList.value).map(lesson => ({ value: lesson, label: lesson })),
   ]);
+  const conjugationTypeOptions = computed(() => [
+    { value: 'te', label: t('teForm.conjugationTypeTe') },
+    { value: 'nai', label: t('teForm.conjugationTypeNai') },
+  ]);
+  const conjugationLabel = computed(() => t(conjugationType.value === 'nai' ? 'teForm.naiFormLabel' : 'teForm.teFormLabel'));
+  const conjugationPlaceholder = computed(() => t(conjugationType.value === 'nai' ? 'teForm.naiFormPlaceholder' : 'teForm.teFormPlaceholder'));
+  const answerConjugationLabel = computed(() => t(conjugationType.value === 'nai' ? 'teForm.answerNaiForm' : 'teForm.answerTeForm'));
   const practiceVerbPool = computed(() => filterByLesson(verbList.value, practiceLessonFilter.value));
   const currentVerb = computed(() => practiceVerbPool.value[currentIndex.value] || null);
   const filteredVerbList = computed(() => {
@@ -160,7 +168,8 @@ export function useTeFormPractice(verbs = teFormVerbData) {
       return;
     }
 
-    const teFormCorrect = !teFormEnabled.value || isTeFormAnswerCorrect(teFormInput.value, currentVerb.value.teForm);
+    const expectedConjugation = getExpectedConjugation(currentVerb.value);
+    const teFormCorrect = !teFormEnabled.value || isTeFormAnswerCorrect(teFormInput.value, expectedConjugation);
     const translationCorrect = !translationEnabled.value || isTranslationAnswerCorrect(translationInput.value, currentVerb.value.translation);
     const correct = teFormCorrect && translationCorrect;
 
@@ -169,7 +178,8 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     feedback.value = correct
       ? t('teForm.feedback.correct')
       : t('teForm.feedback.wrong', {
-        teForm: currentVerb.value.teForm,
+        conjugationLabel: conjugationLabel.value,
+        conjugation: expectedConjugation,
         translation: currentVerb.value.translation,
       });
 
@@ -197,6 +207,11 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     feedbackState.value = 'idle';
   }
 
+  function setConjugationType(value) {
+    conjugationType.value = value === 'nai' ? 'nai' : 'te';
+    clearAnswer();
+  }
+
   function setTranslationEnabled(value) {
     translationEnabled.value = Boolean(value);
     feedback.value = '';
@@ -219,6 +234,18 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     verbListLessonFilter.value = value;
   }
 
+  function getDisplayConjugation(verb) {
+    return getExpectedConjugation(verb);
+  }
+
+  function getExpectedConjugation(verb) {
+    if (conjugationType.value === 'nai') {
+      return verb.naiForm || verb.teForm;
+    }
+
+    return verb.teForm;
+  }
+
   function setInvertedEnabled(value) {
     invertedEnabled.value = Boolean(value);
     if (invertedEnabled.value) {
@@ -235,6 +262,11 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     verbList,
     currentVerb,
     lessonOptions,
+    conjugationType,
+    conjugationTypeOptions,
+    conjugationLabel,
+    conjugationPlaceholder,
+    answerConjugationLabel,
     invertedEnabled,
     teFormEnabled,
     translationEnabled,
@@ -253,9 +285,12 @@ export function useTeFormPractice(verbs = teFormVerbData) {
     sessionRate,
     nextVerb,
     submitAnswer,
+    getExpectedConjugation,
+    getDisplayConjugation,
     setTeFormInput,
     toggleTeFormInputScript,
     setBaseVerbInput,
+    setConjugationType,
     setInvertedEnabled,
     setTeFormEnabled,
     setTranslationEnabled,

@@ -6,5 +6,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.{js,vue}'],
+      exclude: ['src/**/*.test.js'],
+    },
   },
 });

@@ -51,3 +51,20 @@
 はじめます -> はじめて -> começar, iniciar  
 けんがくします -> けんきゅうして -> visitar algum lugar a estudo  
 でんわします -> でんわして -> telefonar  
+
+## Lição 17
+
+おぼえます -> おぼえて -> memorizar  
+わすれます -> わすれて -> esquecer  
+なくします -> なくして -> perder  
+はらいます -> はらって -> pagar  
+かえします -> かえして -> devolver  
+でかけます -> でかけて -> sair  
+ぬぎます -> ぬいで -> tirar roupa ou sapato  
+もっていきます -> もっていって -> levar alguma coisa  
+もってきます -> もってきて -> trazer alguma coisa  
+しんぱいします -> しんぱいして -> preocupar-se  
+ざんぎょうします -> ざんぎょうして -> fazer hora extra  
+しゅっちょうします -> しゅっちょうして -> viajar a trabalho  
+のみます -> のんで -> tomar remédio  
+はいります -> はいって -> entrar; tomar banho quando usado com おふろに  

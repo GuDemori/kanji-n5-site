@@ -1,10 +1,11 @@
 <script setup>
 import CheckAnswerButton from './CheckAnswerButton.vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import BaseSelect from './BaseSelect.vue';
 import KanaInput from './KanaInput.vue';
 import PracticePromptCard from './PracticePromptCard.vue';
 import SessionMetrics from './SessionMetrics.vue';
+import arrowDownIcon from '../arrow-down.svg';
 import { useI18n } from '../i18n';
 import { useTeFormPractice } from '../composables/useTeFormPractice';
 
@@ -13,6 +14,11 @@ const {
   verbList,
   currentVerb,
   lessonOptions,
+  conjugationType,
+  conjugationTypeOptions,
+  conjugationLabel,
+  conjugationPlaceholder,
+  answerConjugationLabel,
   invertedEnabled,
   teFormEnabled,
   translationEnabled,
@@ -31,6 +37,8 @@ const {
   sessionRate,
   nextVerb,
   submitAnswer,
+  getDisplayConjugation,
+  setConjugationType,
   setTeFormInput,
   toggleTeFormInputScript,
   setBaseVerbInput,
@@ -44,6 +52,20 @@ const filterOptions = computed(() => [
   { value: 'verb', label: t('teForm.searchFilterVerb') },
   { value: 'translation', label: t('teForm.searchFilterTranslation') },
 ]);
+const rulesExpanded = ref(true);
+const usesExpanded = ref(true);
+
+const useCards = computed(() => t(conjugationType.value === 'nai' ? 'teForm.naiUses' : 'teForm.uses')
+  .split('|')
+  .map(use => {
+    const [title, structure, phrase, ...meaningLines] = use.split('\n');
+    return {
+      title,
+      structure,
+      phrase,
+      meaning: meaningLines.join('\n'),
+    };
+  }));
 </script>
 
 <template>
@@ -56,57 +78,64 @@ const filterOptions = computed(() => [
     <SessionMetrics :session-stats="stats" :session-rate="sessionRate" />
 
     <section class="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <div class="mb-4 grid gap-3 lg:grid-cols-[minmax(0,416px)_1fr]">
+      <div class="mb-4 grid gap-3 md:grid-cols-2">
+        <BaseSelect
+          :model-value="conjugationType"
+          :label="t('teForm.conjugationTypeLabel')"
+          :options="conjugationTypeOptions"
+          @update:model-value="setConjugationType"
+        />
+
         <BaseSelect
           :model-value="practiceLessonFilter"
           :label="t('teForm.practiceLessonFilterLabel')"
           :options="lessonOptions"
           @update:model-value="setPracticeLessonFilter"
         />
+      </div>
 
-        <div class="flex flex-wrap items-center gap-4 lg:justify-end">
-          <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-            <span class="font-semibold">{{ t('teForm.answerTeForm') }}</span>
-            <input
-              type="checkbox"
-              class="peer sr-only"
-              :checked="teFormEnabled"
-              @change="setTeFormEnabled($event.target.checked)"
-            >
-            <span
-              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-              aria-hidden="true"
-            />
-          </label>
+      <div class="mb-4 flex flex-wrap items-center gap-4">
+        <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+          <span class="font-semibold">{{ answerConjugationLabel }}</span>
+          <input
+            type="checkbox"
+            class="peer sr-only"
+            :checked="teFormEnabled"
+            @change="setTeFormEnabled($event.target.checked)"
+          >
+          <span
+            class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+            aria-hidden="true"
+          />
+        </label>
 
-          <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-            <span class="font-semibold">{{ t('teForm.answerTranslation') }}</span>
-            <input
-              type="checkbox"
-              class="peer sr-only"
-              :checked="translationEnabled"
-              @change="setTranslationEnabled($event.target.checked)"
-            >
-            <span
-              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-              aria-hidden="true"
-            />
-          </label>
+        <label v-if="!invertedEnabled" class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+          <span class="font-semibold">{{ t('teForm.answerTranslation') }}</span>
+          <input
+            type="checkbox"
+            class="peer sr-only"
+            :checked="translationEnabled"
+            @change="setTranslationEnabled($event.target.checked)"
+          >
+          <span
+            class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+            aria-hidden="true"
+          />
+        </label>
 
-          <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
-            <span class="font-semibold">{{ t('teForm.invertPractice') }}</span>
-            <input
-              type="checkbox"
-              class="peer sr-only"
-              :checked="invertedEnabled"
-              @change="setInvertedEnabled($event.target.checked)"
-            >
-            <span
-              class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
-              aria-hidden="true"
-            />
-          </label>
-        </div>
+        <label class="inline-flex items-center gap-2 text-sm text-slate-200 select-none">
+          <span class="font-semibold">{{ t('teForm.invertPractice') }}</span>
+          <input
+            type="checkbox"
+            class="peer sr-only"
+            :checked="invertedEnabled"
+            @change="setInvertedEnabled($event.target.checked)"
+          >
+          <span
+            class="relative h-6 w-11 rounded-full bg-slate-700/80 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform after:content-[''] peer-checked:bg-sky-500/70 peer-checked:after:translate-x-5 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-sky-300"
+            aria-hidden="true"
+          />
+        </label>
       </div>
 
       <PracticePromptCard
@@ -119,11 +148,11 @@ const filterOptions = computed(() => [
 
       <div class="grid gap-3" :class="invertedEnabled ? '' : 'md:grid-cols-2'">
         <label v-if="!invertedEnabled" class="text-sm text-slate-300">
-          {{ t('teForm.teFormLabel') }}
+          {{ conjugationLabel }}
           <KanaInput
             :model-value="teFormInput"
             :disabled="!teFormEnabled"
-            :placeholder="teFormInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : t('teForm.teFormPlaceholder')"
+            :placeholder="teFormInputScript === 'katakana' ? t('flashcard.inputKatakanaPlaceholder') : conjugationPlaceholder"
             :show-script-toggle="true"
             :switch-title="teFormInputScript === 'katakana' ? t('flashcard.switchToHiragana') : t('flashcard.switchToKatakana')"
             class="mt-1"
@@ -180,75 +209,216 @@ const filterOptions = computed(() => [
       </div>
     </section>
 
-    <section class="mt-5 rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-      <h3 class="text-xl font-bold text-slate-100">{{ t('teForm.rulesTitle') }}</h3>
+    <section class="mt-5 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+      <button
+        type="button"
+        class="flex w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-300"
+        :aria-expanded="String(rulesExpanded)"
+        @click="rulesExpanded = !rulesExpanded"
+      >
+        <span class="text-2xl font-bold text-slate-100">{{ t(conjugationType === 'nai' ? 'teForm.naiRulesTitle' : 'teForm.teRulesTitle') }}</span>
+        <img
+          :src="arrowDownIcon"
+          alt=""
+          class="h-5 w-5 shrink-0 brightness-0 invert transition-transform"
+          :class="rulesExpanded ? '' : '-rotate-90'"
+          aria-hidden="true"
+        >
+      </button>
 
-      <div class="mt-3 grid gap-3 lg:grid-cols-3">
-        <article class="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-          <h4 class="text-lg font-bold text-slate-100">{{ t('teForm.rules.group1.title') }}</h4>
+      <div
+        v-if="rulesExpanded"
+        class="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-relaxed text-slate-300"
+      >
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-start">
+          <div class="shrink-0 lg:w-44">
+            <h4 class="text-base font-bold text-slate-100">{{ t('teForm.groupGuideTitle') }}</h4>
+            <p class="mt-1 text-slate-400">{{ t('teForm.groupGuideIntro') }}</p>
+          </div>
+          <div class="grid flex-1 gap-2 md:grid-cols-3">
+            <p><span class="font-bold text-sky-100">{{ t('teForm.rules.group1.title') }}:</span> {{ t('teForm.groupGuide.group1') }}</p>
+            <p><span class="font-bold text-sky-100">{{ t('teForm.rules.group2.title') }}:</span> {{ t('teForm.groupGuide.group2') }}</p>
+            <p><span class="font-bold text-sky-100">{{ t('teForm.rules.group3.title') }}:</span> {{ t('teForm.groupGuide.group3') }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="rulesExpanded && conjugationType === 'te'" class="mt-3 grid gap-3 lg:grid-cols-3">
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group1.title') }}</h4>
           <div class="mt-3 space-y-4">
             <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
               <p class="font-semibold text-slate-100">{{ t('teForm.rules.group1.iChRi') }}</p>
-              <p>かいます -> かって</p>
-              <p>まちます -> まって</p>
-              <p>かえります -> かえって</p>
+              <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+              <div class="mt-1 space-y-1 font-semibold text-slate-100">
+                <p>かいます -> かって</p>
+                <p>まちます -> まって</p>
+                <p>かえります -> かえって</p>
+              </div>
             </div>
             <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
               <p class="font-semibold text-slate-100">{{ t('teForm.rules.group1.miBiNi') }}</p>
-              <p>のみます -> のんで</p>
-              <p>よびます -> よんで</p>
-              <p>しにます -> しんで</p>
+              <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+              <div class="mt-1 space-y-1 font-semibold text-slate-100">
+                <p>のみます -> のんで</p>
+                <p>よびます -> よんで</p>
+                <p>しにます -> しんで</p>
+              </div>
             </div>
             <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
               <p class="font-semibold text-slate-100">{{ t('teForm.rules.group1.ki') }}</p>
-              <p>かきます -> かいて</p>
+              <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+              <p class="mt-1 font-semibold text-slate-100">かきます -> かいて</p>
             </div>
             <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
               <p class="font-semibold text-slate-100">{{ t('teForm.rules.group1.gi') }}</p>
-              <p>いそぎます -> いそいで</p>
+              <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+              <p class="mt-1 font-semibold text-slate-100">いそぎます -> いそいで</p>
             </div>
             <div>
+              <p class="text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
               <p class="font-semibold text-slate-100">{{ t('teForm.rules.group1.shi') }}</p>
-              <p>はなします -> はなして</p>
+              <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+              <p class="mt-1 font-semibold text-slate-100">はなします -> はなして</p>
             </div>
             <div>
-              <p class="font-semibold text-slate-100">{{ t('teForm.rules.exception') }}</p>
-              <p>いきます -> いって</p>
+              <p class="text-xs font-bold uppercase tracking-wide text-amber-200">{{ t('teForm.exceptionLabel') }}</p>
+              <p class="mt-1 font-semibold text-slate-100">いきます -> いって</p>
             </div>
           </div>
         </article>
 
-        <article class="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-          <h4 class="text-lg font-bold text-slate-100">{{ t('teForm.rules.group2.title') }}</h4>
-          <p class="mt-3">{{ t('teForm.rules.group2.description') }}</p>
-          <div class="mt-3 space-y-1">
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group2.title') }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.group2.description') }}</p>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-2 space-y-1 font-semibold text-slate-100">
             <p>たべます -> たべて</p>
             <p>みます -> みて</p>
             <p>あけます -> あけて</p>
           </div>
         </article>
 
-        <article class="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-          <h4 class="text-lg font-bold text-slate-100">{{ t('teForm.rules.group3.title') }}</h4>
-          <p class="mt-3">{{ t('teForm.rules.group3.irregular') }}</p>
-          <div class="mt-3 space-y-1">
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group3.title') }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.group3.irregular') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
             <p>します -> して</p>
             <p>きます -> きて</p>
           </div>
-          <p class="mt-4">{{ t('teForm.rules.group3.compound') }}</p>
-          <div class="mt-3 space-y-1">
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.group3.compound') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
             <p>べんきょうします -> べんきょうして</p>
             <p>けんきゅうします -> けんきゅうして</p>
           </div>
         </article>
       </div>
+
+      <div v-if="rulesExpanded && conjugationType === 'nai'" class="mt-3 grid gap-3 lg:grid-cols-3">
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group1.title') }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group1Description') }}</p>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-2 space-y-1 font-semibold text-slate-100">
+            <p>かきます -> かかない</p>
+            <p>いそぎます -> いそがない</p>
+            <p>のみます -> のまない</p>
+            <p>とります -> とらない</p>
+            <p>あそびます -> あそばない</p>
+            <p>まちます -> またない</p>
+            <p>はなします -> はなさない</p>
+          </div>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-amber-200">{{ t('teForm.attentionLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group1IException') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
+            <p>かいます -> かわない</p>
+            <p>はらいます -> はらわない</p>
+          </div>
+        </article>
+
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group2.title') }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group2Description') }}</p>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-2 space-y-1 font-semibold text-slate-100">
+            <p>たべます -> たべない</p>
+            <p>みます -> みない</p>
+            <p>おきます -> おきない</p>
+            <p>でかけます -> でかけない</p>
+            <p>わすれます -> わすれない</p>
+          </div>
+        </article>
+
+        <article class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300">
+          <h4 class="text-xl font-bold text-slate-100">{{ t('teForm.rules.group3.title') }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group3Irregular') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
+            <p>します -> しない</p>
+            <p>きます -> こない</p>
+          </div>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group3SuruCompound') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
+            <p>べんきょうします -> べんきょうしない</p>
+            <p>しんぱいします -> しんぱいしない</p>
+            <p>ざんぎょうします -> ざんぎょうしない</p>
+            <p>しゅっちょうします -> しゅっちょうしない</p>
+          </div>
+          <p class="mt-4 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.ruleLabel') }}</p>
+          <p class="font-semibold text-slate-100">{{ t('teForm.rules.nai.group3KuruCompound') }}</p>
+          <p class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.examplesLabel') }}</p>
+          <div class="mt-1 space-y-1 font-semibold text-slate-100">
+            <p>もってきます -> もってこない</p>
+          </div>
+        </article>
+      </div>
     </section>
 
-    <section class="mt-5 rounded-2xl border border-white/10 bg-slate-900/70 p-4">
-      <h3 class="text-xl font-bold text-slate-100">{{ t('teForm.usesTitle') }}</h3>
-      <div class="mt-3 grid gap-3 md:grid-cols-2">
-        <article v-for="use in t('teForm.uses').split('|')" :key="use" class="rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-          <p class="whitespace-pre-line">{{ use }}</p>
+    <section class="mt-5 rounded-2xl border border-white/10 bg-slate-900/70 p-5">
+      <button
+        type="button"
+        class="flex w-full items-center justify-between gap-3 rounded-lg text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-300"
+        :aria-expanded="String(usesExpanded)"
+        @click="usesExpanded = !usesExpanded"
+      >
+        <span class="text-2xl font-bold text-slate-100">{{ t(conjugationType === 'nai' ? 'teForm.naiUsesTitle' : 'teForm.teUsesTitle') }}</span>
+        <img
+          :src="arrowDownIcon"
+          alt=""
+          class="h-5 w-5 shrink-0 brightness-0 invert transition-transform"
+          :class="usesExpanded ? '' : '-rotate-90'"
+          aria-hidden="true"
+        >
+      </button>
+
+      <div v-if="usesExpanded" class="mt-3 grid gap-3 md:grid-cols-2">
+        <article
+          v-for="use in useCards"
+          :key="use.title"
+          class="rounded-xl border border-white/10 bg-white/5 p-4 text-base leading-relaxed text-slate-300"
+        >
+          <h4 class="text-lg font-bold text-slate-100">{{ use.title }}</h4>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-sky-200">{{ t('teForm.structureLabel') }}</p>
+          <p class="font-semibold text-slate-100 whitespace-pre-line">{{ use.structure }}</p>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.phraseLabel') }}</p>
+          <p class="font-semibold text-slate-100 whitespace-pre-line">{{ use.phrase }}</p>
+          <p class="mt-3 text-xs font-bold uppercase tracking-wide text-slate-400">{{ t('teForm.meaningLabel') }}</p>
+          <p class="whitespace-pre-line">{{ use.meaning }}</p>
         </article>
       </div>
     </section>
@@ -294,7 +464,7 @@ const filterOptions = computed(() => [
               :key="verb.id"
               class="rounded-xl border border-white/10 bg-slate-950/50 p-4 text-base text-slate-300"
             >
-              <p class="font-semibold leading-relaxed text-slate-100">{{ verb.verb }} -> {{ verb.teForm }} -> {{ verb.translation }}</p>
+              <p class="font-semibold leading-relaxed text-slate-100">{{ verb.verb }} -> {{ getDisplayConjugation(verb) }} -> {{ verb.translation }}</p>
             </article>
           </div>
         </section>

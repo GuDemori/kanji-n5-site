@@ -2,6 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import arrowDownIcon from '../arrow-down.svg';
 
+let selectIdCounter = 0;
+
 const props = defineProps({
   modelValue: {
     type: String,
@@ -28,6 +30,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue']);
 const open = ref(false);
 const root = ref(null);
+const selectId = `base-select-${selectIdCounter++}`;
 
 const selectedLabel = computed(() => {
   const selected = props.options.find(option => option.value === props.modelValue);
@@ -63,13 +66,16 @@ onUnmounted(() => {
 
 <template>
   <div ref="root" :class="wrapperClass">
-    <p v-if="label">{{ label }}</p>
+    <label v-if="label" :for="selectId">{{ label }}</label>
 
     <div class="relative" :class="buttonClass">
       <button
+        :id="selectId"
         type="button"
-        class="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-left text-slate-100"
+        class="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-left text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300"
+        :aria-label="label || selectedLabel"
         :aria-expanded="String(open)"
+        aria-haspopup="listbox"
         @click="open = !open"
       >
         <span class="truncate">{{ selectedLabel }}</span>
@@ -84,6 +90,7 @@ onUnmounted(() => {
       <div
         v-if="open"
         class="absolute left-0 top-full z-30 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-slate-950 shadow-xl"
+        role="listbox"
       >
         <button
           v-for="option in options"
@@ -91,6 +98,8 @@ onUnmounted(() => {
           type="button"
           class="block w-full px-3 py-2 text-left text-sm text-slate-100 hover:bg-sky-500/20 focus:bg-sky-500/20 focus:outline-none"
           :class="modelValue === option.value ? 'bg-sky-500/20 font-semibold text-sky-100' : ''"
+          role="option"
+          :aria-selected="String(modelValue === option.value)"
           @click="selectOption(option.value)"
         >
           {{ option.label }}
